@@ -23,6 +23,9 @@ jobs:
         #env:
         #  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
+      - name: Check JAR exists
+        run: ls -al build/libs
+
       - name: Upload jar to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
