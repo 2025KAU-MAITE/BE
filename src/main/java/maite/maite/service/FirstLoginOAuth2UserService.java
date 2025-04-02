@@ -4,12 +4,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
-public class FirstLoginOAuth2User implements OAuth2User {
+public class FirstLoginOAuth2UserService implements OAuth2User {
     private final Map<String, Object> attributes;
 
-    public FirstLoginOAuth2User(Map<String, Object> attributes) {
+    public FirstLoginOAuth2UserService(Map<String, Object> attributes) {
         this.attributes = attributes;
     }
 
@@ -20,7 +21,7 @@ public class FirstLoginOAuth2User implements OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return List.of();
     }
 
     @Override

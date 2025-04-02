@@ -30,6 +30,6 @@ public class User {
     @Column(nullable = true)
     private String phonenumber;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Gender gender;
 }

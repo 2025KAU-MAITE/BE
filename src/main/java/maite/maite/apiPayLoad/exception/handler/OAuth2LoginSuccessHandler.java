@@ -1,13 +1,15 @@
-package maite.maite.apiPayload.exception.handler;
+package maite.maite.apiPayLoad.exception.handler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import maite.maite.config.JwtTokenProvider;
+import maite.maite.domain.entity.RefreshToken;
 import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
-import maite.maite.service.FirstLoginOAuth2User;
+import maite.maite.service.FirstLoginOAuth2UserService;
+import maite.maite.service.RefreshTokenService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -20,24 +22,32 @@ import java.io.IOException;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
-        if (oAuth2User instanceof FirstLoginOAuth2User) {
+        if (oAuth2User instanceof FirstLoginOAuth2UserService) {
             String email = oAuth2User.getAttribute("email");
-
-            response.sendRedirect("http://localhost:3000/register/additional-info?email=" + email);
+            String json = String.format("{\"firstLogin\": true, \"email\": \"%s\"}", email);
+            response.getWriter().write(json);
+            return;
         }
 
         String email = oAuth2User.getAttribute("email");
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("유저 없음"));
-        String token = jwtTokenProvider.generateToken(user);
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        response.sendRedirect("http://localhost:3000/login/success?token=" + token);
+        String json = String.format(
+                "{\"firstLogin\": false, \"accessToken\": \"%s\", \"refreshToken\": \"%s\"}",
+                accessToken, refreshToken.getToken()
+        );        response.getWriter().write(json);
     }
 }
