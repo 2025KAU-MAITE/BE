@@ -1,5 +1,5 @@
 ---
-name: "🐛:Bug report"
+name: "🐛 : Bug report"
 about: 버그 보고, 수정
 title: ''
 labels: ":bug: bugfix"
