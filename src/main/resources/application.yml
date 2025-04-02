@@ -1,16 +1,16 @@
-#spring:
-#  datasource:
-#    url: ${DB_URL}
-#    username: ${DB_USERNAME}
-#    password: ${DB_PASSWORD}
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#  jpa:
-#    hibernate:
-#      ddl-auto: create
-#    database-platform: org.hibernate.dialect.MySQL8Dialect
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQL8Dialect
 
-#jwt:
-#  secret: ${JWT_SECRET}
-#  expiration: 3600000  # 액세스 토큰 만료 시간 (1시간)
-#  refresh-token:
-#    expiration: 1209600000  # 리프레시 토큰 만료 시간 (2주)
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000  # 액세스 토큰 만료 시간 (1시간)
+  refresh-token:
+    expiration: 1209600000  # 리프레시 토큰 만료 시간 (2주)
