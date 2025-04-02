@@ -2,7 +2,7 @@
 name: Feature request
 about: 기능 추가
 title: ''
-labels: enhancement
+labels: ":sparkles: feature"
 assignees: rlawjdgns02
 
 ---
