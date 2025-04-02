@@ -1,5 +1,5 @@
 ---
-name: Feature request
+name: "✨: Feature request"
 about: 기능 추가
 title: ''
 labels: ":sparkles: feature"
