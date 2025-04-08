@@ -8,10 +8,20 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
-
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GoogleOAuthId}
+            client-secret: ${GoogleOAuthPassword}
   springdoc:
     api-docs:
       enabled: true
     swagger-ui:
       enabled: true
       path: /swagger-ui.html
+
+jwt:
+  secret: ${jwt_secret}
+  expiration: 3600000
