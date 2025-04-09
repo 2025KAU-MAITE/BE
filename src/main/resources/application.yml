@@ -15,10 +15,11 @@ spring:
           google:
             client-id: ${GoogleOAuthId}
             client-secret: ${GoogleOAuthPassword}
-  springdoc:
-    api-docs:
+
+springdoc:
+  api-docs:
       enabled: true
-    swagger-ui:
+  swagger-ui:
       enabled: true
       path: /swagger-ui.html
 
