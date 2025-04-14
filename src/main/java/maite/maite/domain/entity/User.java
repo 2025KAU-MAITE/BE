@@ -35,4 +35,7 @@ public class User {
 
     @Column(nullable = false)
     private String phonenumber;
+
+    @Column(name = "refresh token")
+    private String refreshToken;
 }
