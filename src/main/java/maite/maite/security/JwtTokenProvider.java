@@ -19,6 +19,9 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}") // ms 단위 (예: 3600000 = 1시간)
     private long expiration;
 
+    @Value("${jwt.refreshTokenValidity}")
+    private long refreshTokenValidity;
+
     private Key key;
 
     @PostConstruct
@@ -34,6 +37,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(now)
+                .claim("type", "access")
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -49,11 +53,51 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
+    //리프레시토큰 생성
+    public String createRefreshToken(String email) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + refreshTokenValidity);
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .claim("type", "refresh")
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     // 토큰 유효성 검사
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // 액세스 토큰인지 검사
+    public boolean isAccessToken(String token) {
+        String type = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("type", String.class);
+        return type.equals("access");
+    }
+
+    // 액세스 토큰 만료 검사
+    public boolean isTokenExpired(String token) {
+        try {
+            Date expiration = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
+            return expiration.before(new Date());
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
