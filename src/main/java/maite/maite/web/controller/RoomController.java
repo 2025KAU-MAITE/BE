@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import maite.maite.domain.entity.Room;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.service.RoomService;
-import maite.maite.web.dto.RoomCreateRequest;
-import maite.maite.web.dto.RoomResponse;
-import maite.maite.web.dto.RoomUpdateRequest;
+import maite.maite.web.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +33,8 @@ public class RoomController {
     @PostMapping
     public ResponseEntity<?> createRoom(@RequestBody RoomCreateRequest request,
                                         @AuthenticationPrincipal CustomerUserDetails userDetails) {
-        Room createdRoom = roomService.createRoom(userDetails.getUser(), request);
-        return ResponseEntity.ok(createdRoom);
+        roomService.createRoom(userDetails.getUser(), request);
+        return ResponseEntity.ok("회의방이 생성되었습니다.");
     }
 
     @DeleteMapping("/{roomId}/me")
@@ -57,8 +55,22 @@ public class RoomController {
     public ResponseEntity<?> updateRoom(@PathVariable Long roomId,
                                         @RequestBody RoomUpdateRequest request,
                                         @AuthenticationPrincipal CustomerUserDetails userDetails) {
-        RoomResponse response = roomService.updateRoom(roomId, userDetails.getUser(), request);
-        return ResponseEntity.ok(response);
+        roomService.updateRoom(roomId, userDetails.getUser(), request);
+        return ResponseEntity.ok("회의방 이름이 수정되었습니다.");
+    }
+
+    @PostMapping("/{roomId}/invites")
+    public ResponseEntity<?> inviteUserToRoom(@PathVariable Long roomId,
+                                              @RequestBody RoomInviteRequest request,
+                                              @AuthenticationPrincipal CustomerUserDetails userDetails) {
+        roomService.inviteUserToRoom(roomId, userDetails.getUser(), request.getEmail());
+        return ResponseEntity.ok("사용자 초대 완료");
+    }
+
+    @GetMapping("/{roomId}/invites/pending")
+    public ResponseEntity<?> getPendingInvitees(@PathVariable Long roomId) {
+        List<PendingRoomResponse> pending = roomService.getPendingInvitees(roomId);
+        return ResponseEntity.ok(pending);
     }
 }
 
