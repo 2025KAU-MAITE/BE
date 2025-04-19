@@ -2,7 +2,7 @@ package maite.maite.web.dto.timetable.response;
 
 import lombok.Builder;
 import lombok.Getter;
-import maite.maite.web.dto.timetable.request.EventRequestDto;
+import maite.maite.web.dto.timetable.response.EventResponseDto;
 
 import java.util.List;
 
@@ -11,5 +11,5 @@ import java.util.List;
 public class TimetableResponseDto {
     private Long id;
     private Long userId;
-    private List<EventRequestDto> events;
+    private List<EventResponseDto> events;
 }
