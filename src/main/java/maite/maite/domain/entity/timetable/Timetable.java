@@ -21,6 +21,9 @@ public class Timetable extends BaseEntity {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 20)
+    private String title;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
