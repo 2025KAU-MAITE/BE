@@ -44,6 +44,10 @@ dependencies {
 
 	// Validation (회원가입 시 유효성 검사용 등)
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	//웹소켓
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter'
 }
 
 tasks.named('test') {
