@@ -1,6 +1,7 @@
 package maite.maite.apiPayload.exception.handler;
 
-import maite.maite.web.dto.ErrorResponse;
+
+import maite.maite.web.dto.User.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

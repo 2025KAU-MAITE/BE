@@ -31,11 +31,11 @@ public class User {
     private LoginProvider provider;
 
     @Column(nullable = false)
-    private Gender gender;
-
-    @Column(nullable = false)
     private String phonenumber;
 
     @Column(name = "refresh token")
     private String refreshToken;
+
+    @Column(nullable = false)
+    private String address;
 }

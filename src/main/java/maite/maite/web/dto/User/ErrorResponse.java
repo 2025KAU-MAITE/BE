@@ -1,4 +1,4 @@
-package maite.maite.web.dto;
+package maite.maite.web.dto.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
