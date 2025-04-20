@@ -29,7 +29,7 @@ public class Event {
     @Column(nullable = false)
     private String endTime;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "timetable_id", nullable = false)
     private Timetable timetable;
 }
