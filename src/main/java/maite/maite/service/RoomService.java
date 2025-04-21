@@ -2,14 +2,14 @@ package maite.maite.service;
 
 import java.util.List;
 import maite.maite.domain.entity.User;
-import maite.maite.domain.entity.Room;
-import maite.maite.web.dto.PendingRoomResponse;
-import maite.maite.web.dto.RoomCreateRequest;
-import maite.maite.web.dto.RoomResponse;
-import maite.maite.web.dto.RoomUpdateRequest;
+import maite.maite.web.dto.room.response.PendingRoomResponse;
+import maite.maite.web.dto.room.request.RoomCreateRequest;
+import maite.maite.web.dto.room.response.RoomResponse;
+import maite.maite.web.dto.room.request.RoomUpdateRequest;
+import maite.maite.web.dto.room.response.RoomSummaryResponse;
 
 public interface RoomService {
-    List<RoomResponse> getRoomsOfUser(User user);
+    List<RoomSummaryResponse> getRoomsOfUser(User user);
     RoomResponse getRoomDetail(Long roomId);
     void createRoom(User host, RoomCreateRequest request);
     void leaveRoom(Long roomId, User user);

@@ -1,4 +1,4 @@
-package maite.maite.web.dto;
+package maite.maite.web.dto.room.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,10 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoomResponse {
+public class RoomSummaryResponse {
     private Long id;
     private String name;
     private String hostEmail;
-    private List<String> participantEmails;
-    private LocalDateTime createdAt;
 }
