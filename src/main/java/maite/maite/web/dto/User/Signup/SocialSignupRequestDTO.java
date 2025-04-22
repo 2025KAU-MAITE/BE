@@ -5,15 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-public class SignupRequestDTO {
+public class SocialSignupRequestDTO {
     @Getter
     @Setter
     @Builder
     @AllArgsConstructor
-    public static class SignupRequest {
-        private String email;
-        private String password;
-        private String name;
+    public static class SocialAdditionalInfo {
         private String phonenumber;
         private String address;
     }

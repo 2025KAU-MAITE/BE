@@ -2,12 +2,13 @@ package maite.maite.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.ApiResponse;
-import maite.maite.domain.Enum.Gender;
+import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
+import maite.maite.repository.UserRepository;
 import maite.maite.security.CustomerUserDetails;
+import maite.maite.security.JwtTokenProvider;
 import maite.maite.service.AuthService;
 import maite.maite.web.dto.User.*;
 import maite.maite.web.dto.User.Login.LoginRequest;
@@ -18,6 +19,7 @@ import maite.maite.web.dto.User.Refresh.RefreshRequest;
 import maite.maite.web.dto.User.Refresh.RefreshResponse;
 import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import maite.maite.web.dto.User.Signup.SignupResponseDTO;
+import maite.maite.web.dto.User.Signup.SocialSignupResponseDTO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,8 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입 API", description = "회원가입")
@@ -111,6 +115,52 @@ public class AuthController {
                 .name(user.getName())
                 .email(user.getEmail())
                 .phonenumber(user.getPhonenumber())
+                .build();
+        return ApiResponse.onSuccess(response);
+    }
+
+    @PostMapping("/complete-social-signup")
+    public ApiResponse<SocialSignupResponseDTO.socialSignupResponse> completeSocialSignup(
+            @Parameter(description = "이메일") @RequestParam String email,
+            @Parameter(description = "이름") @RequestParam String name,
+            @Parameter(description = "제공자(GOOGLE)") @RequestParam String provider,
+            @Parameter(description = "전화번호") @RequestParam String phonenumber,
+            @Parameter(description = "주소") @RequestParam String address) {
+
+        // 이메일 중복 확인
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("이미 가입된 이메일입니다.");
+        }
+        LoginProvider loginProvider;
+        try {
+            loginProvider = LoginProvider.valueOf(provider.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            loginProvider = LoginProvider.GOOGLE; // 기본값 설정
+        }
+
+        // 사용자 생성
+        User user = User.builder()
+                .email(email)
+                .name(name)
+                .provider(loginProvider)
+                .phonenumber(phonenumber)
+                .address(address)
+                .build();
+
+        userRepository.save(user);
+
+        String accessToken = jwtTokenProvider.createToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken(email);
+
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        SocialSignupResponseDTO.socialSignupResponse response = SocialSignupResponseDTO.socialSignupResponse.builder()
+                .email(user.getEmail())
+                .name(user.getName())
+                .phonenumber(user.getPhonenumber())
+                .address(user.getAddress())
+                .provider(user.getProvider().name())
                 .build();
         return ApiResponse.onSuccess(response);
     }
