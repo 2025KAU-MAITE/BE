@@ -18,10 +18,10 @@ spring:
 
 springdoc:
   api-docs:
-      enabled: true
+    enabled: true
   swagger-ui:
-      enabled: true
-      path: /swagger-ui.html
+    enabled: true
+    path: /swagger-ui.html
 
 jwt:
   secret: ${jwt_secret}
