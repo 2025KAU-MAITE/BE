@@ -27,3 +27,10 @@ jwt:
   secret: ${jwt_secret}
   expiration: 3600000
   refreshTokenValidity: 604800000
+
+coolsms:
+  api:
+    key: NCSKMQYS5BN9KSLH
+    secret: HLBG4UYRG34GL6OZNFJ9WP0OEZLRQJGX
+  from:
+    number: 010-7510-3115

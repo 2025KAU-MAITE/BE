@@ -1,4 +1,4 @@
-package maite.maite.web.controller;
+package maite.maite.web.controller.auth;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,7 +9,7 @@ import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.security.JwtTokenProvider;
-import maite.maite.service.AuthService;
+import maite.maite.service.auth.AuthService;
 import maite.maite.web.dto.User.*;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResponse;
@@ -21,6 +21,7 @@ import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import maite.maite.web.dto.User.Signup.SignupResponseDTO;
 import maite.maite.web.dto.User.Signup.SocialSignupResponseDTO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입 API", description = "회원가입")
@@ -82,6 +84,31 @@ public class AuthController {
         return ApiResponse.onSuccess(response);
     }
 
+    @GetMapping("/find-id")
+    @Operation(summary = "아이디 찾기 API", description = "아이디 찾기")
+    public String findUserEmail(
+            @Parameter(description = "전화번호") @RequestParam String phonenumber
+    ) {
+        return authService.findEmailByPhonenumber(phonenumber);
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "비밀번호 재설정 API", description = "비밀번호 찾기")
+    public ApiResponse<String> resetPassword(
+            @Parameter(description = "아이디") @RequestParam String email,
+            @Parameter(description = "새 비밀번호") @RequestParam String password1,
+            @Parameter(description = "새 비밀번호 확인") @RequestParam String password2
+    ) {
+        if(!password1.equals(password2)){
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("인증 필요"));
+        String encodedPasword = passwordEncoder.encode(password1);
+        user.setPassword(encodedPasword);
+        userRepository.save(user);
+        return ApiResponse.onSuccess("비밀번호 변경 성공");
+    }
 
     @PostMapping("refresh")
     @Operation(summary = "토큰 재발급 API", description = "액세스 토큰 재발급")

@@ -1,4 +1,4 @@
-package maite.maite.service;
+package maite.maite.service.auth;
 
 import lombok.RequiredArgsConstructor;
 import maite.maite.domain.Enum.LoginProvider;
@@ -77,5 +77,11 @@ public class AuthServiceImpl implements AuthService{
     public void logout(User user) {
         user.setRefreshToken(null);
         userRepository.save(user);
+    }
+
+    public String findEmailByPhonenumber(String phonenumber) {
+        return userRepository.findByPhonenumber(phonenumber)
+                .map(User::getEmail)
+                .orElseThrow(()-> new IllegalArgumentException("해당 전화번호에 일치하는 아이디는 없습니다."));
     }
 }

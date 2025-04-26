@@ -1,4 +1,4 @@
-package maite.maite.service;
+package maite.maite.service.auth;
 
 import maite.maite.domain.entity.User;
 import maite.maite.web.dto.User.Login.LoginRequest;
@@ -11,4 +11,5 @@ public interface AuthService {
     LoginResult login(LoginRequest loginRequest);
     String reissueAccessToken(String refreshToken);
     void logout(User user);
+    String findEmailByPhonenumber(String phonenumber);
 }

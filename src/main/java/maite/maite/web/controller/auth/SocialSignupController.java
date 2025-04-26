@@ -1,4 +1,4 @@
-package maite.maite.web.controller;
+package maite.maite.web.controller.auth;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
