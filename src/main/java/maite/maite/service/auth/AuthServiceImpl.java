@@ -1,6 +1,7 @@
 package maite.maite.service.auth;
 
 import lombok.RequiredArgsConstructor;
+import maite.maite.apiPayload.exception.handler.CommonExceptionHandler;
 import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
@@ -10,6 +11,8 @@ import maite.maite.web.dto.User.Login.LoginResult;
 import maite.maite.web.dto.User.Signup.SignupRequestDTO.SignupRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static maite.maite.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND_FOR_FIND_EMAIL;
 
 @Service
 @RequiredArgsConstructor
@@ -79,9 +82,9 @@ public class AuthServiceImpl implements AuthService{
         userRepository.save(user);
     }
 
-    public String findEmailByPhonenumber(String phonenumber) {
-        return userRepository.findByPhonenumber(phonenumber)
+    public String findEmailByPhonenumber(String name, String phonenumber) {
+        return userRepository.findByNameAndPhonenumber(name, phonenumber)
                 .map(User::getEmail)
-                .orElseThrow(()-> new IllegalArgumentException("해당 전화번호에 일치하는 아이디는 없습니다."));
+                .orElseThrow(()-> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
     }
 }

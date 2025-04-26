@@ -49,7 +49,6 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public boolean sendVerificationSms(String phoneNumber, String verificationCode) {
         try {
-            System.out.println("Send Start");
             Message message = new Message();
             message.setFrom(fromNumber);
             message.setTo(phoneNumber);

@@ -4,13 +4,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.ApiResponse;
+import maite.maite.apiPayload.exception.handler.CommonExceptionHandler;
 import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.security.JwtTokenProvider;
 import maite.maite.service.auth.AuthService;
+import maite.maite.service.auth.SmsService;
+import maite.maite.service.auth.VerificationService;
 import maite.maite.web.dto.User.*;
+import maite.maite.web.dto.User.Find.FindResponseDTO;
+import maite.maite.web.dto.User.Find.ResetPasswordDTO;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResponse;
 import maite.maite.web.dto.User.Login.LoginResult;
@@ -19,12 +24,15 @@ import maite.maite.web.dto.User.Refresh.RefreshRequest;
 import maite.maite.web.dto.User.Refresh.RefreshResponse;
 import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import maite.maite.web.dto.User.Signup.SignupResponseDTO;
+import maite.maite.web.dto.User.Signup.SignupVerifyResponseDTO;
 import maite.maite.web.dto.User.Signup.SocialSignupResponseDTO;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+
+import static maite.maite.apiPayload.code.status.ErrorStatus.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,6 +42,9 @@ public class AuthController {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final SmsService smsService;
+    private final VerificationService verificationService;
+
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입 API", description = "회원가입")
@@ -57,15 +68,57 @@ public class AuthController {
         return ApiResponse.onSuccess(response);
     }
 
+    @GetMapping("/signup/send-code")
+    @Operation(summary = "인증번호 발송(회원가입) API", description = "회원가입 인증번호 발송")
+    public ApiResponse<SignupVerifyResponseDTO.sendCodeForFindIdDto> sendVerificationCodeForSignup(
+            @Parameter(description = "이름") @RequestParam String name,
+            @Parameter(description = "전화번호") @RequestParam String phonenumber
+    ) {
+        String verificationCode = smsService.generateVerificationCode();
+        boolean isSent = smsService.sendVerificationSms(phonenumber, verificationCode);
+        if (isSent) {
+            verificationService.saveVerification(phonenumber, verificationCode, 5);
+            SignupVerifyResponseDTO.sendCodeForFindIdDto response = new SignupVerifyResponseDTO.sendCodeForFindIdDto("인증번호가 발송됭었습니다");
+            return ApiResponse.onSuccess(response);
+        } else {
+            SignupVerifyResponseDTO.sendCodeForFindIdDto response = new SignupVerifyResponseDTO.sendCodeForFindIdDto("인증번호가 발송에 문제가 생겼습니다. 잠시후 다시 시도해주십시오.");
+            return ApiResponse.onSuccess(response);
+        }
+    }
+
+    @GetMapping("/signup/verify-code")
+    @Operation(summary = "인증번호 검증(회원가입) API", description = "회원가입 인증번호 검증")
+    public ApiResponse<SignupVerifyResponseDTO.signupCodeResponseDto> verifyCodeForSignup(
+            @Parameter(description = "전화번호") @RequestParam String phonenumber,
+            @Parameter(description = "인증번호") @RequestParam String verificationCode
+    ) {
+        boolean isValid = verificationService.verifyCode(phonenumber, verificationCode);
+
+        if (isValid) {
+            SignupVerifyResponseDTO.signupCodeResponseDto response = SignupVerifyResponseDTO.signupCodeResponseDto.builder()
+                    .status(true)
+                    .message("인증되었습니다.")
+                    .build();
+
+            return ApiResponse.onSuccess(response);
+        } else {
+            SignupVerifyResponseDTO.signupCodeResponseDto response = SignupVerifyResponseDTO.signupCodeResponseDto.builder()
+                    .status(true)
+                    .message("인증번호가 올바르지 않거나 만료되었습니다.")
+                    .build();
+            return ApiResponse.onSuccess(response);
+        }
+    }
+
     @GetMapping("/signup/check")
     @Operation(summary = "이메일 중복확인", description = "회원가입 시 이메일 중복확인")
-    public ApiResponse<SignupResponseDTO.SingupCheckResponse> emailCheck(
+    public ApiResponse<SignupResponseDTO.SignupCheckResponse> emailCheck(
             @Parameter(description = "이메일") @RequestParam String email
     ){
         boolean isDuplicated = authService.isDuplicated(email);
-        SignupResponseDTO.SingupCheckResponse response = SignupResponseDTO.SingupCheckResponse.builder()
+        SignupResponseDTO.SignupCheckResponse response = SignupResponseDTO.SignupCheckResponse.builder()
                 .isDuplicated(isDuplicated)
-                .message(isDuplicated ? "이미 존재하는 이메일입니다." : email+"은 사용 가능합니다.")
+                .message(isDuplicated ? "이미 존재하는 이메일입니다." : email+"은 사용 가능한 이메일니다.")
                 .build();
         return ApiResponse.onSuccess(response);
     }
@@ -84,30 +137,110 @@ public class AuthController {
         return ApiResponse.onSuccess(response);
     }
 
-    @GetMapping("/find-id")
-    @Operation(summary = "아이디 찾기 API", description = "아이디 찾기")
-    public String findUserEmail(
+    @GetMapping("/find-id/send-code")
+    @Operation(summary = "인증번호 발송(아이디 찾기) API", description = "아이디 찾기 인증번호 발송")
+    public ApiResponse<FindResponseDTO.sendCodeForFindIdDto> sendVerificationCodeForFindId(
+            @Parameter(description = "이름") @RequestParam String name,
             @Parameter(description = "전화번호") @RequestParam String phonenumber
     ) {
-        return authService.findEmailByPhonenumber(phonenumber);
+        userRepository.findByNameAndPhonenumber(name, phonenumber)
+                .orElseThrow(() -> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
+
+        String verifcationCode = smsService.generateVerificationCode();
+        boolean isSent = smsService.sendVerificationSms(phonenumber, verifcationCode);
+
+        if (isSent) {
+            verificationService.saveVerification(phonenumber, verifcationCode, 5);
+            FindResponseDTO.sendCodeForFindIdDto response = new FindResponseDTO.sendCodeForFindIdDto("인증번호가 발송됭었습니다");
+            return ApiResponse.onSuccess(response);
+        } else {
+            FindResponseDTO.sendCodeForFindIdDto response = new FindResponseDTO.sendCodeForFindIdDto("인증번호 발송에 문제가 생겼습니다. 잠시후 다시 시도해주십시오.");
+            return ApiResponse.onSuccess(response);
+        }
+    }
+
+    @GetMapping("/find-id/verify")
+    @Operation(summary = "인증번호 검증(아이디 찾기) API", description = "인증번호 검증 후 아이디 반환")
+    public ApiResponse<FindResponseDTO.findIdResponseDto> verifyAndFindEmail(
+            @Parameter(description = "이름") @RequestParam String name,
+            @Parameter(description = "전화번호") @RequestParam String phonenumber,
+            @Parameter(description = "인증번호") @RequestParam String verificationCode
+    ) {
+        boolean isValid = verificationService.verifyCode(phonenumber, verificationCode);
+
+        if (isValid) {
+            FindResponseDTO.findIdResponseDto response = FindResponseDTO.findIdResponseDto.builder()
+                    .status(true)
+                    .email(authService.findEmailByPhonenumber(name, phonenumber))
+                    .build();
+            return ApiResponse.onSuccess(response);
+        } else {
+            FindResponseDTO.findIdResponseDto response = FindResponseDTO.findIdResponseDto.builder()
+                    .status(false)
+                    .message("인증번호가 올바르지 않거나 만료되었습니다.")
+                    .build();
+
+            return ApiResponse.onSuccess(response);
+        }
     }
 
     @PostMapping("/reset-password")
     @Operation(summary = "비밀번호 재설정 API", description = "비밀번호 찾기")
     public ApiResponse<String> resetPassword(
             @Parameter(description = "아이디") @RequestParam String email,
-            @Parameter(description = "새 비밀번호") @RequestParam String password1,
-            @Parameter(description = "새 비밀번호 확인") @RequestParam String password2
+            @Parameter(description = "새 비밀번호") @RequestParam String password
     ) {
-        if(!password1.equals(password2)){
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("인증 필요"));
-        String encodedPasword = passwordEncoder.encode(password1);
+        String encodedPasword = passwordEncoder.encode(password);
         user.setPassword(encodedPasword);
         userRepository.save(user);
         return ApiResponse.onSuccess("비밀번호 변경 성공");
+    }
+
+    @GetMapping("/reset-password/send-code")
+    @Operation(summary = "인증번호 발송(비밀번호 재설정) API", description = "비밀번호 재설정 인증번호 발송")
+    public ApiResponse<ResetPasswordDTO.sendCodeForResetPasswordDto> sendVerificationCodeForResetPassword(
+            @Parameter(description = "이름") @RequestParam String name,
+            @Parameter(description = "전화번호") @RequestParam String phonenumber
+    ) {
+        userRepository.findByNameAndPhonenumber(name, phonenumber)
+                .orElseThrow(() -> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
+
+        String verifcationCode = smsService.generateVerificationCode();
+        boolean isSent = smsService.sendVerificationSms(phonenumber, verifcationCode);
+
+        if (isSent) {
+            verificationService.saveVerification(phonenumber, verifcationCode, 5);
+            ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호가 발송됭었습니다");
+            return ApiResponse.onSuccess(response);
+        } else {
+            ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호 발송에 문제가 생겼습니다. 잠시후 다시 시도해주십시오.");
+            return ApiResponse.onSuccess(response);
+        }
+    }
+
+    @GetMapping("/reset-password/verify")
+    @Operation(summary = "인증번호 검증(비밀번호 재설정) API", description = "인증번호 검증")
+    public ApiResponse<ResetPasswordDTO.resetCodeResponseDto> verifyAndResetPassword(
+            @Parameter(description = "전화번호") @RequestParam String phonenumber,
+            @Parameter(description = "인증번호") @RequestParam String verificationCode
+    ) {
+        boolean isValid = verificationService.verifyCode(phonenumber, verificationCode);
+
+        if (isValid) {
+            ResetPasswordDTO.resetCodeResponseDto response = ResetPasswordDTO.resetCodeResponseDto.builder()
+                    .status(true)
+                    .message("인증되었습니다.")
+                    .build();
+            return ApiResponse.onSuccess(response);
+        } else {
+            ResetPasswordDTO.resetCodeResponseDto response = ResetPasswordDTO.resetCodeResponseDto.builder()
+                    .status(false)
+                    .message("인증번호가 올바르지 않거나 만료되었습니다.")
+                    .build();
+            return ApiResponse.onSuccess(response);
+        }
     }
 
     @PostMapping("refresh")
@@ -156,14 +289,9 @@ public class AuthController {
 
         // 이메일 중복 확인
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("이미 가입된 이메일입니다.");
+            throw new CommonExceptionHandler(EMAIL_ALREADY_EXIST);
         }
-        LoginProvider loginProvider;
-        try {
-            loginProvider = LoginProvider.valueOf(provider.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            loginProvider = LoginProvider.GOOGLE; // 기본값 설정
-        }
+        LoginProvider loginProvider = LoginProvider.GOOGLE;
 
         // 사용자 생성
         User user = User.builder()
@@ -176,7 +304,6 @@ public class AuthController {
 
         userRepository.save(user);
 
-        String accessToken = jwtTokenProvider.createToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
 
         user.setRefreshToken(refreshToken);

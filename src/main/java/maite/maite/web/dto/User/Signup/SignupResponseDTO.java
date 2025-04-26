@@ -25,7 +25,7 @@ public class SignupResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SingupCheckResponse {
+    public static class SignupCheckResponse {
         private boolean isDuplicated;
         private String message;
     }

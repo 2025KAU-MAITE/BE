@@ -11,5 +11,5 @@ public interface AuthService {
     LoginResult login(LoginRequest loginRequest);
     String reissueAccessToken(String refreshToken);
     void logout(User user);
-    String findEmailByPhonenumber(String phonenumber);
+    String findEmailByPhonenumber(String name, String phonenumber);
 }

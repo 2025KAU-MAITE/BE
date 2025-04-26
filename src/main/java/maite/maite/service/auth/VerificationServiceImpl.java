@@ -1,7 +1,5 @@
 package maite.maite.service.auth;
 
-import maite.maite.domain.entity.VerificationCode;
-import maite.maite.repository.VerificationCodeRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,21 +11,13 @@ public class VerificationServiceImpl implements VerificationService {
 
     // 키: 전화번호, 값: 인증정보(코드와 만료시간)
     private final Map<String, VerificationInfo> verificationStorage = new ConcurrentHashMap<>();
-    private final VerificationCodeRepository verificationCodeRepository;
-
-    public VerificationServiceImpl(VerificationCodeRepository verificationCodeRepository) {
-        this.verificationCodeRepository = verificationCodeRepository;
-    }
 
     @Override
     public void saveVerification(String phoneNumber, String code, int expirationMinutes) {
+        // 인증번호와 만료시간 저장
         LocalDateTime expiryTime = LocalDateTime.now().plusMinutes(expirationMinutes);
-
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setPhoneNumber(phoneNumber);
-        verificationCode.setCode(code);
-        verificationCode.setExpiryTime(expiryTime);
-        verificationCodeRepository.save(verificationCode);
+        VerificationInfo verificationInfo = new VerificationInfo(code, expiryTime);
+        verificationStorage.put(phoneNumber, verificationInfo);
     }
 
     @Override

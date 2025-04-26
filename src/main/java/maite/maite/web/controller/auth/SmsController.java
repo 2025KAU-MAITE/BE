@@ -31,7 +31,7 @@ public class SmsController {
             verificationService.saveVerification(phonenumber, verifcationCode, 5);
             return ApiResponse.onSuccess(null);
         } else {
-            return ApiResponse.onFailure("SMS4001", "인증번호 발송 실패", null);
+            return ApiResponse.onFailure("SMS_SEND_FAILURE", "인증번호 발송 실패", null);
         }
     }
 
