@@ -30,7 +30,7 @@ jwt:
 
 coolsms:
   api:
-    key: NCSKMQYS5BN9KSLH
-    secret: HLBG4UYRG34GL6OZNFJ9WP0OEZLRQJGX
+    key: ${coolsmsKey}
+    secret: ${coolsmsSecret}
   from:
-    number: 010-7510-3115
+    number: ${coolsmsNum}
