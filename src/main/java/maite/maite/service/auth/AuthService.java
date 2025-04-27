@@ -7,7 +7,7 @@ import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 
 public interface AuthService {
     boolean isDuplicated(String email);
-    User signup(SignupRequestDTO.SignupRequest signupRequest);
+    User signup(SignupRequestDTO signupRequest);
     LoginResult login(LoginRequest loginRequest);
     String reissueAccessToken(String refreshToken);
     void logout(User user);

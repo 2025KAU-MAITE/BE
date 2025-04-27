@@ -49,13 +49,15 @@ public class AuthController {
     @PostMapping("/signup")
     @Operation(summary = "회원가입 API", description = "회원가입")
     public ApiResponse<SignupResponseDTO.SignupResponse> signup(
-            @Parameter(description = "이메일") @RequestParam String email,
-            @Parameter(description = "비밀번호") @RequestParam String password,
-            @Parameter(description = "이름") @RequestParam String name,
-            @Parameter(description = "전화번호") @RequestParam String phonenumber,
-            @Parameter(description = "주소") @RequestParam String address
+            @Parameter(description = "회원가입 입력") @RequestBody SignupRequestDTO signupRequestDTO
     ) {
-        SignupRequestDTO.SignupRequest request = new SignupRequestDTO.SignupRequest(email, password, name, phonenumber, address);
+        String email = signupRequestDTO.getEmail();
+        String password = signupRequestDTO.getPassword();
+        String name = signupRequestDTO.getName();
+        String phonenumber = signupRequestDTO.getPhonenumber();
+        String address = signupRequestDTO.getAddress();
+
+        SignupRequestDTO request = new SignupRequestDTO(email, password, name, phonenumber, address);
         User user = authService.signup(request);
         SignupResponseDTO.SignupResponse response = SignupResponseDTO.SignupResponse.builder()
                 .userId(user.getId())
@@ -68,12 +70,12 @@ public class AuthController {
         return ApiResponse.onSuccess(response);
     }
 
-    @GetMapping("/signup/send-code")
+    @PostMapping("/signup/send-code")
     @Operation(summary = "인증번호 발송(회원가입) API", description = "회원가입 인증번호 발송")
     public ApiResponse<SignupVerifyResponseDTO.sendCodeForFindIdDto> sendVerificationCodeForSignup(
-            @Parameter(description = "이름") @RequestParam String name,
-            @Parameter(description = "전화번호") @RequestParam String phonenumber
+            @Parameter(description = "인증번호 발송 요청") @RequestBody FindResponseDTO.sendCodeRequestForSignup request
     ) {
+        String phonenumber = request.getPhonenumber();
         String verificationCode = smsService.generateVerificationCode();
         boolean isSent = smsService.sendVerificationSms(phonenumber, verificationCode);
         if (isSent) {
@@ -86,12 +88,14 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/signup/verify-code")
+    @PostMapping("/signup/verify-code")
     @Operation(summary = "인증번호 검증(회원가입) API", description = "회원가입 인증번호 검증")
     public ApiResponse<SignupVerifyResponseDTO.signupCodeResponseDto> verifyCodeForSignup(
-            @Parameter(description = "전화번호") @RequestParam String phonenumber,
-            @Parameter(description = "인증번호") @RequestParam String verificationCode
+            @Parameter(description = "인증번호 검증 요청") @RequestBody FindResponseDTO.verifyCodeRequest request
     ) {
+        String phonenumber = request.getPhonenumber();
+        String verificationCode = request.getVerificationCode();
+
         boolean isValid = verificationService.verifyCode(phonenumber, verificationCode);
 
         if (isValid) {
@@ -126,8 +130,10 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "로그인 API", description = "로그인")
     public ApiResponse<LoginResponse> login(
-            @Parameter(description = "이메일") @RequestParam String email,
-            @Parameter(description = "비밀번호") @RequestParam String password) {
+            @Parameter(description = "로그인 정보 입력") @RequestBody LoginRequest loginRequest) {
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+
         LoginRequest request = new LoginRequest(email, password);
         LoginResult result = authService.login(request);
         LoginResponse response = LoginResponse.builder()
@@ -137,12 +143,14 @@ public class AuthController {
         return ApiResponse.onSuccess(response);
     }
 
-    @GetMapping("/find-id/send-code")
+    @PostMapping("/find-id/send-code")
     @Operation(summary = "인증번호 발송(아이디 찾기) API", description = "아이디 찾기 인증번호 발송")
     public ApiResponse<FindResponseDTO.sendCodeForFindIdDto> sendVerificationCodeForFindId(
-            @Parameter(description = "이름") @RequestParam String name,
-            @Parameter(description = "전화번호") @RequestParam String phonenumber
+            @Parameter(description = "인증번호 발송 요청") @RequestBody FindResponseDTO.sendCodeRequestForEmail request
     ) {
+        String phonenumber = request.getPhonenumber();
+        String name = request.getName();
+
         userRepository.findByNameAndPhonenumber(name, phonenumber)
                 .orElseThrow(() -> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
 
@@ -159,13 +167,15 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/find-id/verify")
+    @PostMapping("/find-id/verify")
     @Operation(summary = "인증번호 검증(아이디 찾기) API", description = "인증번호 검증 후 아이디 반환")
     public ApiResponse<FindResponseDTO.findIdResponseDto> verifyAndFindEmail(
-            @Parameter(description = "이름") @RequestParam String name,
-            @Parameter(description = "전화번호") @RequestParam String phonenumber,
-            @Parameter(description = "인증번호") @RequestParam String verificationCode
+            @Parameter(description = "인증번호 검증 요청") @RequestBody FindResponseDTO.verifyCodeRequestForEmail request
     ) {
+        String phonenumber = request.getPhonenumber();
+        String verificationCode = request.getVerificationCode();
+        String name = request.getName();
+
         boolean isValid = verificationService.verifyCode(phonenumber, verificationCode);
 
         if (isValid) {
@@ -187,9 +197,11 @@ public class AuthController {
     @PostMapping("/reset-password")
     @Operation(summary = "비밀번호 재설정 API", description = "비밀번호 찾기")
     public ApiResponse<String> resetPassword(
-            @Parameter(description = "아이디") @RequestParam String email,
-            @Parameter(description = "새 비밀번호") @RequestParam String password
+            @Parameter(description = "비밀번호 재설정") @RequestBody ResetPasswordDTO.resetPasswordRequest request
     ) {
+        String email = request.getEmail();
+        String password = request.getPassword();
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("인증 필요"));
         String encodedPasword = passwordEncoder.encode(password);
@@ -198,34 +210,42 @@ public class AuthController {
         return ApiResponse.onSuccess("비밀번호 변경 성공");
     }
 
-    @GetMapping("/reset-password/send-code")
+    @PostMapping("/reset-password/send-code")
     @Operation(summary = "인증번호 발송(비밀번호 재설정) API", description = "비밀번호 재설정 인증번호 발송")
     public ApiResponse<ResetPasswordDTO.sendCodeForResetPasswordDto> sendVerificationCodeForResetPassword(
-            @Parameter(description = "이름") @RequestParam String name,
-            @Parameter(description = "전화번호") @RequestParam String phonenumber
+            @Parameter(description = "이름") @RequestBody FindResponseDTO.sendCodeRequestForPass request
     ) {
-        userRepository.findByNameAndPhonenumber(name, phonenumber)
+        String name = request.getName();
+        String phonenumber = request.getPhonenumber();
+
+        User user = userRepository.findByNameAndPhonenumber(name, phonenumber)
                 .orElseThrow(() -> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
 
-        String verifcationCode = smsService.generateVerificationCode();
-        boolean isSent = smsService.sendVerificationSms(phonenumber, verifcationCode);
+        if (user.getEmail().equals(request.getEmail())) {
+            String verifcationCode = smsService.generateVerificationCode();
+            boolean isSent = smsService.sendVerificationSms(phonenumber, verifcationCode);
 
-        if (isSent) {
-            verificationService.saveVerification(phonenumber, verifcationCode, 5);
-            ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호가 발송됭었습니다");
-            return ApiResponse.onSuccess(response);
+            if (isSent) {
+                verificationService.saveVerification(phonenumber, verifcationCode, 5);
+                ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호가 발송됭었습니다");
+                return ApiResponse.onSuccess(response);
+            } else {
+                ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호 발송에 문제가 생겼습니다. 잠시후 다시 시도해주십시오.");
+                return ApiResponse.onSuccess(response);
+            }
         } else {
-            ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호 발송에 문제가 생겼습니다. 잠시후 다시 시도해주십시오.");
-            return ApiResponse.onSuccess(response);
+            return ApiResponse.onFailure("NOT_MATCH", "유저 정보와 이메일이 일치하지 않습니다.", null);
         }
     }
 
-    @GetMapping("/reset-password/verify")
+    @PostMapping("/reset-password/verify")
     @Operation(summary = "인증번호 검증(비밀번호 재설정) API", description = "인증번호 검증")
     public ApiResponse<ResetPasswordDTO.resetCodeResponseDto> verifyAndResetPassword(
-            @Parameter(description = "전화번호") @RequestParam String phonenumber,
-            @Parameter(description = "인증번호") @RequestParam String verificationCode
+            @Parameter(description = "전화번호") @RequestBody FindResponseDTO.verifyCodeRequest request
     ) {
+        String phonenumber = request.getPhonenumber();
+        String verificationCode = request.getVerificationCode();
+
         boolean isValid = verificationService.verifyCode(phonenumber, verificationCode);
 
         if (isValid) {

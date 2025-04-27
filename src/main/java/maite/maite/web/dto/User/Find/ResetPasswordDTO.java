@@ -6,6 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public class ResetPasswordDTO {
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class resetPasswordRequest {
+        private String email;
+        private String password;
+    }
+
     @Builder
     @Getter
     @NoArgsConstructor

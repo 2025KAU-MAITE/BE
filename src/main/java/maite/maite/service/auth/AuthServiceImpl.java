@@ -8,7 +8,7 @@ import maite.maite.repository.UserRepository;
 import maite.maite.security.JwtTokenProvider;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResult;
-import maite.maite.web.dto.User.Signup.SignupRequestDTO.SignupRequest;
+import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +25,7 @@ public class AuthServiceImpl implements AuthService{
         return userRepository.findByEmail(email).isPresent();
     }
 
-    public User signup(SignupRequest request) {
+    public User signup(SignupRequestDTO request) {
         if (isDuplicated(request.getEmail())) {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
