@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import maite.maite.domain.Enum.Gender;
 import maite.maite.domain.Enum.LoginProvider;
+import maite.maite.domain.mapping.ChatRoomUser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @Entity
@@ -38,4 +42,7 @@ public class User {
 
     @Column(name = "refresh token")
     private String refreshToken;
+
+    @OneToMany(mappedBy = "user")
+    private List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
 }
