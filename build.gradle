@@ -54,6 +54,13 @@ dependencies {
 
 	//coolsms
 	implementation 'net.nurigo:sdk:4.3.0'
+
+	//googleSpeech
+	implementation 'com.google.cloud:google-cloud-speech:4.55.0'
+
+	//gcs
+	implementation 'com.google.cloud:google-cloud-storage:2.27.0'
+
 }
 
 tasks.named('test') {
