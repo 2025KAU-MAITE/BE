@@ -27,7 +27,8 @@ public class Message {
     //@Column(nullable = false, columnDefinition = "boolean default false")
     //private boolean isRead;
 
-    //private String imageUrl;
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id")

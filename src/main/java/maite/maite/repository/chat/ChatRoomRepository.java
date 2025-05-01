@@ -22,4 +22,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("userId1") Long userId1,
             @Param("userId2") Long userId2,
             @Param("isGroupChat") boolean isGroupChat);
+
+
 }

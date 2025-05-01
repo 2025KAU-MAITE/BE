@@ -27,3 +27,26 @@ jwt:
   secret: ${jwt_secret}
   expiration: 3600000
   refreshTokenValidity: 604800000
+
+coolsms:
+  api:
+    key: NCSXHNGXASOLLJF0
+    secret: Z6V0HL8S5ANIRFV1PV2VUL1YV03CTFRM
+  from:
+    number: 010-7510-3115
+
+# S3
+cloud:
+  aws:
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+      path :
+        chat: chat
+        profile: profile
+    region:
+      static: ${CLOUD_AWS_REGION}
+    stack:
+      auto: false
+    credentials:
+      accessKey: ${CLOUD_AWS_ACCESS_KEY}
+      secretKey: ${CLOUD_AWS_SECRET_KEY}

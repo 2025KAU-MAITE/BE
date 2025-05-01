@@ -8,6 +8,7 @@ import maite.maite.domain.entity.chat.ChatRoom;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.service.chat.ChatService;
 import maite.maite.web.dto.chat.request.ChatRoomGroupRequestDto;
+//import maite.maite.web.dto.chat.request.InviteUserChatRoomRequestDto;
 import maite.maite.web.dto.chat.response.ChatRoomResponseDto;
 import maite.maite.web.dto.chat.request.ChatRoomPersonalRequestDto;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -82,5 +83,17 @@ public class ChatRoomController {
         return ApiResponse.onSuccess(null);
     }
 
-    //채팅 내역 조회
+    //채팅방 초대
+    //
+    @Operation(summary = "채팅방 초대 API")
+    @PostMapping("/{roomId}/invite")
+    public ApiResponse<Void> inviteUserToChatRoom(
+            @PathVariable Long roomId,
+            @RequestBody List<Long> userIds,
+            @AuthenticationPrincipal CustomerUserDetails userDetails
+    ){
+        Long userId = Long.parseLong(userDetails.getUsername());
+        chatService.inviteUserChatRoom(roomId, userId, userIds);
+        return ApiResponse.onSuccess(null);
+    }
 }

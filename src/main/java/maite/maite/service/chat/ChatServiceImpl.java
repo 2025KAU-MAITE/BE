@@ -4,14 +4,18 @@ import lombok.RequiredArgsConstructor;
 import maite.maite.domain.Enum.ChatRoomUserRole;
 import maite.maite.domain.entity.User;
 import maite.maite.domain.entity.chat.ChatRoom;
+import maite.maite.domain.entity.chat.Message;
 import maite.maite.domain.mapping.ChatRoomUser;
 import maite.maite.repository.UserRepository;
 import maite.maite.repository.chat.ChatRoomRepository;
 import maite.maite.repository.chat.ChatRoomUserRepository;
+import maite.maite.repository.chat.MessageRepository;
 import maite.maite.web.dto.chat.response.ChatRoomResponseDto;
+import maite.maite.web.dto.chat.response.MessageResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +26,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final ChatRoomUserRepository chatRoomUserRepository;
+    private final MessageRepository messageRepository;
 
     // 개인 채팅방 생성
     @Override
@@ -217,9 +222,132 @@ public class ChatServiceImpl implements ChatService {
         // 채팅방에 속한 모든 사용자를 삭제
         chatRoomUserRepository.deleteAllByChatRoomId(roomId);
         // 메시지 삭제
-        messageRepositiry.deleteAllByChatRoomId(roomId);
+        //messageRepository.deleteAllByChatRoomId(roomId);
         // 채팅방 삭제
         chatRoomRepository.delete(chatRoom);
     }
 
+    //채팅방 초대
+    @Override
+    @Transactional
+    public void inviteUserChatRoom( Long roomId, Long inviterId, List<Long> userIds) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(()-> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+
+        //초대자가 채팅방에 속해있는지 확인
+        ChatRoomUser inviter = chatRoomUserRepository.findByChatRoomIdAndUserId(roomId, inviterId)
+                .orElseThrow(()-> new IllegalArgumentException("채팅방에 참여하지 않은 유저입니다."));
+
+        //그룹채팅방이 아니면 초대 불가
+        if (!chatRoom.isGroupChat()) {
+            throw new IllegalArgumentException("개인 채팅방에는 사용자를 초대할 수 없습니다.");
+        }
+
+        //사용자 초대 로직
+        for(Long newUserId : userIds) {
+            boolean alreadyExists = chatRoomUserRepository.existsByChatRoomIdAndUserId(roomId, newUserId);
+            if (alreadyExists) {
+                continue;
+            }
+
+            User newUser = userRepository.findById(newUserId).
+                    orElseThrow(()-> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+            ChatRoomUser newMember = ChatRoomUser.builder()
+                    .user(newUser)
+                    .chatRoom(chatRoom)
+                    .role(ChatRoomUserRole.USER)
+                    .build();
+
+            chatRoom.addUser(newMember);
+            chatRoomUserRepository.save(newMember);
+        }
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDto sendTextMessage(Long roomId, Long senderId, String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("메시지 내용이 비어있습니다.");
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        chatRoomUserRepository.findByChatRoomIdAndUserId(roomId, senderId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다."));
+
+        Message message = Message.builder()
+                .content(content)
+                //.imageUrl(null) // 이미지 URL은 null로 설정
+                .sendAt(LocalDateTime.now())
+                .chatRoom(chatRoom)
+                .sender(sender)
+                .build();
+
+        messageRepository.save(message);
+
+        chatRoom.addMessage(message);
+        chatRoomRepository.save(chatRoom);
+
+        return MessageResponseDto.builder()
+                .id(message.getId())
+                .roomId(roomId)
+                .senderId(senderId)
+                .senderName(sender.getName())
+                //.senderProfileImageUrl(sender.getProfileImageUrl()) 유저이미지 아직 설정 안됨
+                .content(message.getContent())
+                .imageUrl(null)
+                .sendAt(message.getSendAt())
+                .isRead(false)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDto sendImageMessage(Long roomId, Long senderId, String imageUrl) {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("이미지 URL이 필요합니다.");
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 사용자가 채팅방에 속해있는지 확인
+        chatRoomUserRepository.findByChatRoomIdAndUserId(roomId, senderId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다."));
+
+        // 메시지 생성 (이미지만 있는 경우)
+        Message message = Message.builder()
+                .content(null)
+                //.imageUrl(imageUrl)
+                .sender(sender)
+                .chatRoom(chatRoom)
+                .sendAt(LocalDateTime.now())
+                .build();
+
+        messageRepository.save(message);
+
+        // 채팅방 최신 메시지 정보 업데이트
+        chatRoom.updateLastMessage(message);
+        chatRoomRepository.save(chatRoom);
+
+        return MessageResponseDto.builder()
+                .id(message.getId())
+                .roomId(roomId)
+                .senderId(senderId)
+                .senderName(sender.getName())
+                //.senderProfileImageUrl(sender.getProfileImageUrl())
+                .content(null)
+                .imageUrl(message.getImageUrl())
+                .sendAt(message.getSendAt())
+                .isRead(false)
+                .build();
+    }
 }

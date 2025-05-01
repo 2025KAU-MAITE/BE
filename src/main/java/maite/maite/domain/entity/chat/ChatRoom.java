@@ -1,10 +1,7 @@
 package maite.maite.domain.entity.chat;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import maite.maite.domain.BaseEntity;
 import maite.maite.domain.mapping.ChatRoomUser;
 
@@ -14,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -62,6 +60,14 @@ public class ChatRoom extends BaseEntity {
 
         // 마지막 메시지 정보 업데이트
         this.lastMessageContent = message.getContent();
+        this.lastMessageTime = message.getSendAt();
+    }
+
+    // 마지막 메시지 정보 업데이트 메소드 추가
+    public void updateLastMessage(Message message) {
+        this.lastMessageContent = message.getImageUrl() != null && message.getImageUrl().trim().length() > 0
+                ? "이미지를 보냈습니다."
+                : message.getContent();
         this.lastMessageTime = message.getSendAt();
     }
 
