@@ -61,6 +61,10 @@ dependencies {
 	//gcs
 	implementation 'com.google.cloud:google-cloud-storage:2.27.0'
 
+	//protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.25.1'
+
+
 }
 
 tasks.named('test') {
