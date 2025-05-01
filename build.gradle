@@ -51,6 +51,22 @@ dependencies {
 
 	// S3 설정
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
+	//테스트용 thymeleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	//coolsms
+	implementation 'net.nurigo:sdk:4.3.0'
+
+	//googleSpeech
+	implementation 'com.google.cloud:google-cloud-speech:4.55.0'
+
+	//gcs
+	implementation 'com.google.cloud:google-cloud-storage:2.27.0'
+
+	//protobuf
+	implementation 'com.google.protobuf:protobuf-java:3.25.1'
+
 }
 
 tasks.named('test') {

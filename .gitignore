@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Google Service Account Key
+src/main/resources/maite-*.json

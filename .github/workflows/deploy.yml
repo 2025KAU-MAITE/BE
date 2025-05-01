@@ -61,6 +61,7 @@ jobs:
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_HOST "
             pgrep java | xargs -r kill -15
             sleep 10
+            export GOOGLE_CREDENTIALS='${{ secrets.GOOGLE_CREDENTIALS }}'
             nohup java -jar /home/$EC2_USERNAME/app.jar > app.log 2>&1 &
           "
           rm -f private_key.pem

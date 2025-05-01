@@ -1,14 +1,18 @@
-package maite.maite.service;
+package maite.maite.service.auth;
 
 import lombok.RequiredArgsConstructor;
+import maite.maite.apiPayload.exception.handler.CommonExceptionHandler;
 import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
 import maite.maite.security.JwtTokenProvider;
-import maite.maite.web.dto.LoginRequest;
-import maite.maite.web.dto.SignupRequest;
+import maite.maite.web.dto.User.Login.LoginRequest;
+import maite.maite.web.dto.User.Login.LoginResult;
+import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static maite.maite.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND_FOR_FIND_EMAIL;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +21,12 @@ public class AuthServiceImpl implements AuthService{
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public void signup(SignupRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()){
+    public boolean isDuplicated(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    public User signup(SignupRequestDTO request) {
+        if (isDuplicated(request.getEmail())) {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
 
@@ -26,14 +34,15 @@ public class AuthServiceImpl implements AuthService{
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
-                .gender(request.getGender())
                 .provider(LoginProvider.EMAIL)
                 .phonenumber(request.getPhonenumber())
+                .address(request.getAddress())
                 .build();
         userRepository.save(user);
+        return user;
     }
 
-    public String login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
@@ -46,7 +55,9 @@ public class AuthServiceImpl implements AuthService{
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return "accessToken: " +accessToken + " refreshToken: " + refreshToken;
+        LoginResult result = new LoginResult(user, accessToken);
+
+        return result;
     }
 
     public String reissueAccessToken(String refreshToken) {
@@ -69,5 +80,11 @@ public class AuthServiceImpl implements AuthService{
     public void logout(User user) {
         user.setRefreshToken(null);
         userRepository.save(user);
+    }
+
+    public String findEmailByPhonenumber(String name, String phonenumber) {
+        return userRepository.findByNameAndPhonenumber(name, phonenumber)
+                .map(User::getEmail)
+                .orElseThrow(()-> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
     }
 }

@@ -35,9 +35,6 @@ public class User {
     private LoginProvider provider;
 
     @Column(nullable = false)
-    private Gender gender;
-
-    @Column(nullable = false)
     private String phonenumber;
 
     @Column(name = "refresh token")
@@ -45,4 +42,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
+
+    @Column(nullable = false)
+    private String address;
 }

@@ -18,8 +18,12 @@ public enum ErrorStatus implements BaseErrorCode {
 
 
     // 멤버 관려 에러
+    NOT_SAME_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4006", "비밀번호가 일치하지 않습니다."),
+    EMAIL_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "MEMBER4005", "이미 존재하는 이메일입니다."),
     MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다."),
     NICKNAME_NOT_EXIST(HttpStatus.BAD_REQUEST, "MEMBER4002", "닉네임은 필수 입니다."),
+    SMS_SEND_FAIL(HttpStatus.BAD_GATEWAY, "SMS4001", "인증번호를 발송할 수 없습니다"),
+    USER_NOT_FOUND_FOR_FIND_EMAIL(HttpStatus.BAD_REQUEST, "MEMBER4010", "일치하는 유저 정보가 존재하지 않습니다."),
 
     // 예시,,,
     ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "ARTICLE4001", "게시글이 없습니다.");

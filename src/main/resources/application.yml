@@ -15,13 +15,21 @@ spring:
           google:
             client-id: ${GoogleOAuthId}
             client-secret: ${GoogleOAuthPassword}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+openai:
+  api:
+    key: ${OpenAIKey}
 
 springdoc:
   api-docs:
-      enabled: true
+    enabled: true
   swagger-ui:
-      enabled: true
-      path: /swagger-ui.html
+    enabled: true
+    path: /swagger-ui.html
 
 jwt:
   secret: ${jwt_secret}
@@ -30,10 +38,10 @@ jwt:
 
 coolsms:
   api:
-    key: NCSXHNGXASOLLJF0
-    secret: Z6V0HL8S5ANIRFV1PV2VUL1YV03CTFRM
+    key: ${coolsmsKey}
+    secret: ${coolsmsSecret}
   from:
-    number: 010-7510-3115
+    number: ${coolsmsNum}
 
 # S3
 cloud:
@@ -50,3 +58,4 @@ cloud:
     credentials:
       accessKey: ${CLOUD_AWS_ACCESS_KEY}
       secretKey: ${CLOUD_AWS_SECRET_KEY}
+
