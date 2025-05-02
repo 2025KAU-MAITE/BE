@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class PendingRoomResponse {
-    private Long id;
     private String email;
     private String name;
 }
