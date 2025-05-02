@@ -77,6 +77,7 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
+    @Transactional
     public void leaveRoom(Long roomId, User user) {
         Room room = roomQueryService.findRoomById(roomId);
         if (room.getHost().getId().equals(user.getId())) {
@@ -91,11 +92,13 @@ public class RoomServiceImpl implements RoomService {
         userRoomRepository.save(userRoom);
     }
 
+    @Transactional
     public void deleteRoom(Long roomId, User user) {
         Room room = roomQueryService.findRoomById(roomId);
         if (!room.getHost().getId().equals(user.getId())) {
             throw new RuntimeException("삭제 권한 없음");
         }
+        userRoomRepository.deleteAllByRoom(room);
         roomRepository.delete(room);
     }
 

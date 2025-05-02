@@ -9,7 +9,7 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "rooms")
+@Table(name = "room")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,16 +28,6 @@ public class Room {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    //    @Builder.Default
-//    @ManyToMany(fetch = FetchType.LAZY)
-//    @JoinTable(name = "user_room",
-//            joinColumns = @JoinColumn(name = "room_id"),
-//            inverseJoinColumns = @JoinColumn(name = "user_id"))
-//    private List<User> participants = new ArrayList<>();
-//    @Builder.Default
-//    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<UserRoom> participants = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id")

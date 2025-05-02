@@ -38,3 +38,6 @@ out/
 
 ### Google Service Account Key
 src/main/resources/maite-*.json
+
+# IntelliJ run configs
+.run/

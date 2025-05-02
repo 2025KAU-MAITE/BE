@@ -18,4 +18,5 @@ public interface UserRoomRepository extends JpaRepository<UserRoom, UserRoomId>{
     boolean existsByRoomAndUser(Room room, User user);
     boolean existsByRoomAndUserAndStatus(Room room, User user, InviteStatus status);
     Optional<UserRoom> findByRoomAndUser(Room room, User user);
+    void deleteAllByRoom(Room room);
 }
