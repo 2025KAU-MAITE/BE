@@ -1,4 +1,4 @@
-package maite.maite.web.dto;
+package maite.maite.web.dto.room.request;
 
 import lombok.*;
 
@@ -6,6 +6,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoomCreateRequest {
+public class RoomUpdateRequest {
     private String name;
 }

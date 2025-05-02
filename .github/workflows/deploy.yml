@@ -54,14 +54,24 @@ jobs:
           EC2_USERNAME: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
+          echo "[🔐] 키 파일 저장"
           echo "$EC2_SSH_KEY" > private_key.pem
           chmod 600 private_key.pem
+          echo "[📦] JAR 파일 찾기"
           jar_file=$(find build/libs -name '*.jar' ! -name '*plain.jar' | head -n 1)
+          echo "[🚀] EC2로 파일 전송 시작"
           scp -i private_key.pem -o StrictHostKeyChecking=no "$jar_file" $EC2_USERNAME@$EC2_HOST:/home/$EC2_USERNAME/app.jar
+          echo "[🔧] EC2에 접속하여 앱 실행"
           ssh -i private_key.pem -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_HOST "
+            echo '[🛑] 기존 자바 프로세스 종료'
             pgrep java | xargs -r kill -15
             sleep 10
-            export GOOGLE_CREDENTIALS='${{ secrets.GOOGLE_CREDENTIALS }}'
+            echo '[📄] GCP 키 파일 저장'
+            echo '${{ secrets.GOOGLE_CREDENTIALS }}' > /home/$EC2_USERNAME/credentials.json
+            echo '[🔗] GCP 키 경로 환경변수 설정'
+            export GOOGLE_APPLICATION_CREDENTIALS=/home/$EC2_USERNAME/credentials.json
+            echo '[▶️] Spring Boot 앱 실행'
             nohup java -jar /home/$EC2_USERNAME/app.jar > app.log 2>&1 &
           "
+          echo "[🧹] 키 파일 삭제"
           rm -f private_key.pem

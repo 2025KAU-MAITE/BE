@@ -8,10 +8,11 @@ import maite.maite.domain.entity.User;
 import maite.maite.repository.RoomInviteRepository;
 import maite.maite.repository.RoomRepository;
 import maite.maite.repository.UserRepository;
-import maite.maite.web.dto.PendingRoomResponse;
-import maite.maite.web.dto.RoomCreateRequest;
-import maite.maite.web.dto.RoomResponse;
-import maite.maite.web.dto.RoomUpdateRequest;
+import maite.maite.web.dto.room.response.PendingRoomResponse;
+import maite.maite.web.dto.room.request.RoomCreateRequest;
+import maite.maite.web.dto.room.response.RoomResponse;
+import maite.maite.web.dto.room.request.RoomUpdateRequest;
+import maite.maite.web.dto.room.response.RoomSummaryResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,20 +26,14 @@ public class RoomServiceImpl  implements RoomService{
     private final UserRepository userRepository;
     private final RoomInviteRepository roomInviteRepository;
 
-    public List<RoomResponse> getRoomsOfUser(User user) {
+    public List<RoomSummaryResponse> getRoomsOfUser(User user) {
         List<Room> rooms = roomRepository.findAllByParticipantsContaining(user);
 
         return rooms.stream()
-                .map(room -> RoomResponse.builder()
+                .map(room -> RoomSummaryResponse.builder()
                         .id(room.getId())
                         .name(room.getName())
-                        .createdAt(room.getCreatedAt())
                         .hostEmail(room.getHost().getEmail())
-                        .participantEmails(
-                                room.getParticipants().stream()
-                                        .map(User::getEmail)
-                                        .collect(Collectors.toList())
-                        )
                         .build())
                 .collect(Collectors.toList());
     }
@@ -50,6 +45,7 @@ public class RoomServiceImpl  implements RoomService{
         return RoomResponse.builder()
                 .id(room.getId())
                 .name(room.getName())
+                .description(room.getDescription())
                 .createdAt(room.getCreatedAt())
                 .hostEmail(room.getHost().getEmail())
                 .participantEmails(
@@ -64,10 +60,31 @@ public class RoomServiceImpl  implements RoomService{
     public void createRoom(User host, RoomCreateRequest request) {
         Room room = Room.builder()
                 .name(request.getName())
+                .description(request.getDescription())
                 .host(host)
                 .build();
         room.getParticipants().add(host); // 방 생성자도 자동으로 참가자에 포함
         roomRepository.save(room);
+        if (request.getInviteEmails() != null) {
+            for (String email : request.getInviteEmails()) {
+                User invitee = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("사용자 없음: " + email));
+
+                if (room.getParticipants().contains(invitee)) continue;
+
+                boolean alreadyInvited = roomInviteRepository.existsByRoomAndInviteeAndStatus(
+                        room, invitee, InviteStatus.PENDING);
+                if (alreadyInvited) continue;
+
+                RoomInvite invite = RoomInvite.builder()
+                        .room(room)
+                        .inviter(host)
+                        .invitee(invitee)
+                        .build();
+
+                roomInviteRepository.save(invite);
+            }
+        }
     }
 
     public void leaveRoom(Long roomId, User user) {
