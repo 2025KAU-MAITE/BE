@@ -42,9 +42,11 @@ public class ChatRoom extends BaseEntity {
     private LocalDateTime lastMessageTime;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Message> messages = new ArrayList<>();
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
 
     // 채팅방 참여자 추가 헬퍼 메소드

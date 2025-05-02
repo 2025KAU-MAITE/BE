@@ -36,6 +36,8 @@ public class SecurityConfig {
                                 "/api/**",
                                 "/rooms/**",
                                 "/swagger-ui/**",
+                                //"/Chat.html",
+                                "/ws-chat/**",
                                 "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )

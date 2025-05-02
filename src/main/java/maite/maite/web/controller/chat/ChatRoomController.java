@@ -31,7 +31,7 @@ public class ChatRoomController {
             @RequestBody ChatRoomPersonalRequestDto request,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails.getUser().getId();
 
         return ApiResponse.onSuccess(chatService.createPersonalChatRoom(userId, request.getReceiverId()));
     }
@@ -43,7 +43,7 @@ public class ChatRoomController {
             @RequestBody ChatRoomGroupRequestDto request,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails.getUser().getId();
         return ApiResponse.onSuccess(chatService.createGroupChatRoom(request.getRoomName(), userId, request.getMemberIds()));
     }
 
@@ -53,7 +53,7 @@ public class ChatRoomController {
     public ApiResponse<List<ChatRoomResponseDto>> getChatRooms(
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails.getUser().getId();
         return ApiResponse.onSuccess(chatService.getChatRoomsByUserId(userId));
     }
 
@@ -66,7 +66,7 @@ public class ChatRoomController {
             @PathVariable Long roomId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails.getUser().getId();
         chatService.leaveChatRoom(roomId, userId);
         return ApiResponse.onSuccess(null);
     }
@@ -78,7 +78,7 @@ public class ChatRoomController {
             @PathVariable Long roomId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails.getUser().getId();
         chatService.deleteChatRoom(roomId, userId);
         return ApiResponse.onSuccess(null);
     }
@@ -92,7 +92,7 @@ public class ChatRoomController {
             @RequestBody List<Long> userIds,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
-        Long userId = Long.parseLong(userDetails.getUsername());
+        Long userId = userDetails.getUser().getId();
         chatService.inviteUserChatRoom(roomId, userId, userIds);
         return ApiResponse.onSuccess(null);
     }

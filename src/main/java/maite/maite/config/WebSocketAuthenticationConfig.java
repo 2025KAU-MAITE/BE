@@ -37,6 +37,11 @@ public class WebSocketAuthenticationConfig implements WebSocketMessageBrokerConf
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+                //테스트 코드
+                if (accessor == null) {
+                    return message; //Stomp가 아니면 그냥 리턴
+                }
+
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
                     // CONNECT 명령일 때 인증 처리
                     List<String> authorization = accessor.getNativeHeader("Authorization");

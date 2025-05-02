@@ -62,13 +62,13 @@ public class ChatServiceImpl implements ChatService {
         ChatRoomUser senderMember = ChatRoomUser.builder()
                 .user(sender)
                 .chatRoom(chatRoom)
-                //.role(ChatRoomUserRole.User) 권한을 넣을까 말까
+                .role(ChatRoomUserRole.USER) //권한을 넣을까 말까
                 .build();
 
         ChatRoomUser receiverMember = ChatRoomUser.builder()
                 .user(receiver)
                 .chatRoom(chatRoom)
-                //.role(ChatRoomUserRole.User) 권한을 넣을까 말까
+                .role(ChatRoomUserRole.USER) //권한을 넣을까 말까
                 .build();
 
         chatRoom.addUser(senderMember);
@@ -298,7 +298,7 @@ public class ChatServiceImpl implements ChatService {
                 .roomId(roomId)
                 .senderId(senderId)
                 .senderName(sender.getName())
-                //.senderProfileImageUrl(sender.getProfileImageUrl()) 유저이미지 아직 설정 안됨
+                .senderProfileImageUrl(sender.getProfileImageUrl()) //유저이미지 아직 설정 안됨
                 .content(message.getContent())
                 .imageUrl(null)
                 .sendAt(message.getSendAt())

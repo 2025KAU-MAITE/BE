@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>MAITE Chat Test</title>
+  <!-- 절대 URL 사용 및 다른 CDN 시도 -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<div>
+  <input type="text" id="token" placeholder="JWT 토큰 입력" style="width: 300px">
+  <input type="text" id="roomId" placeholder="채팅방 ID" >
+  <input type="text" id="userId" placeholder="사용자 ID" >
+  <button onclick="connectWebSocket()">연결</button>
+</div>
+<div>
+  <input type="text" id="messageInput" placeholder="메시지 입력">
+  <button onclick="sendMessageToServer()">전송</button>
+</div>
+<div id="messages" style="margin-top: 20px; border: 1px solid #ccc; min-height: 200px; padding: 10px;"></div>
+
+<script>
+  // 스크립트 로딩 확인
+  console.log("Script loaded");
+  console.log("SockJS available:", typeof SockJS !== 'undefined');
+  console.log("Stomp available:", typeof Stomp !== 'undefined');
+
+  let stompClient = null;
+
+  function connectWebSocket() {
+    const token = document.getElementById('token').value;
+    const roomId = document.getElementById('roomId').value;
+
+    if (!token || !roomId) {
+      alert('토큰과 채팅방 ID를 입력하세요');
+      return;
+    }
+
+    // 함수 호출 확인
+    console.log("연결 시작...");
+    document.getElementById('messages').innerHTML += "<p>연결 시도 중...</p>";
+
+    try {
+      if (typeof SockJS === 'undefined') {
+        document.getElementById('messages').innerHTML += "<p style='color:red'>오류: SockJS 라이브러리가 로드되지 않았습니다.</p>";
+        return;
+      }
+
+      //const socket = new SockJS('/ws-chat');
+      const socket = new SockJS('http://3.39.205.32:8080/ws-chat');
+      stompClient = Stomp.over(socket);
+
+      // 디버그 모드 활성화
+      stompClient.debug = function(str) {
+        console.log(str);
+        document.getElementById('messages').innerHTML += "<p>" + str + "</p>";
+      };
+
+      const headers = {
+        'Authorization': 'Bearer ' + token
+      };
+
+      stompClient.connect(headers, function(frame) {
+        console.log('Connected: ' + frame);
+        document.getElementById('messages').innerHTML += '<div>연결됨!</div>';
+
+        // 채팅방 구독
+        stompClient.subscribe('/topic/chat/' + roomId, function(response) {
+          console.log('메시지 수신:', response);
+          const message = JSON.parse(response.body);
+          document.getElementById('messages').innerHTML +=
+                  `<div>${message.senderName || message.senderId}: ${message.content || '이미지 메시지'}</div>`;
+        });
+      }, function(error) {
+        console.error('연결 오류:', error);
+        document.getElementById('messages').innerHTML += `<div style="color:red">오류: ${error}</div>`;
+      });
+    } catch (e) {
+      console.error('예외 발생:', e);
+      document.getElementById('messages').innerHTML += `<div style="color:red">예외: ${e.message}</div>`;
+    }
+  }
+
+  function sendMessageToServer() {
+    if (!stompClient || !stompClient.connected) {
+      alert('먼저 연결하세요');
+      return;
+    }
+
+    const content = document.getElementById('messageInput').value;
+    const roomId = document.getElementById('roomId').value;
+    const userId = document.getElementById('userId').value;
+
+    if (!content || !roomId || !userId) {
+      alert('메시지, 채팅방 ID, 사용자 ID를 모두 입력하세요');
+      return;
+    }
+
+    const message = {
+      senderId: parseInt(userId),
+      content: content
+    };
+
+    stompClient.send("/app/chat.sendMessage/" + roomId, {}, JSON.stringify(message));
+    document.getElementById('messageInput').value = '';
+    document.getElementById('messages').innerHTML += `<div style="color:blue">보낸 메시지: ${content}</div>`;
+  }
+</script>
+</body>
+</html>
