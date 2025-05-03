@@ -67,6 +67,9 @@ dependencies {
 	//protobuf
 	implementation 'com.google.protobuf:protobuf-java:3.25.1'
 
+	//spring gcp
+	implementation 'org.springframework.cloud:spring-cloud-gcp-starter:1.2.8.RELEASE'
+
 }
 
 tasks.named('test') {
