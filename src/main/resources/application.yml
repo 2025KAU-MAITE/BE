@@ -19,6 +19,11 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  cloud:
+    gcp:
+      credentials:
+        encoded-key: ${GoogleCredentials}
+      project-id: ${ProjectId}
 
 openai:
   api:
