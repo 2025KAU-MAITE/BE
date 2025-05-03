@@ -10,6 +10,7 @@ import maite.maite.repository.room.RoomRepository;
 import maite.maite.repository.room.UserRoomRepository;
 import maite.maite.repository.UserRepository;
 import maite.maite.web.dto.room.response.PendingRoomResponse;
+import maite.maite.web.dto.room.response.RoomSummaryResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,5 +116,22 @@ public class RoomInviteServiceImpl implements RoomInviteService {
         userRoom.setStatus(InviteStatus.REJECTED);
         userRoom.setRespondedAt(LocalDateTime.now());
         userRoomRepository.save(userRoom);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RoomSummaryResponse> getPendingInvitations(User user) {
+        return userRoomRepository.findAllByUserAndStatus(user, InviteStatus.PENDING)
+                .stream()
+                .map(ur -> {
+                    Room room = ur.getRoom();
+                    return RoomSummaryResponse.builder()
+                            .roomId(room.getId())
+                            .name(room.getName())
+                            .hostEmail(room.getHost().getEmail())
+                            .description(room.getDescription())
+                            .build();
+                })
+                .toList();
     }
 }

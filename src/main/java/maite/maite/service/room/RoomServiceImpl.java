@@ -2,9 +2,13 @@ package maite.maite.service.room;
 
 import lombok.RequiredArgsConstructor;
 import maite.maite.domain.Enum.InviteStatus;
+import maite.maite.domain.entity.meeting.Meeting;
+import maite.maite.domain.entity.meeting.UserMeeting;
 import maite.maite.domain.entity.room.Room;
 import maite.maite.domain.entity.User;
 import maite.maite.domain.entity.room.UserRoom;
+import maite.maite.repository.meeting.MeetingRepository;
+import maite.maite.repository.meeting.UserMeetingRepository;
 import maite.maite.repository.room.RoomRepository;
 import maite.maite.repository.UserRepository;
 import maite.maite.repository.room.UserRoomRepository;
@@ -26,6 +30,8 @@ public class RoomServiceImpl implements RoomService {
     private final UserRoomRepository userRoomRepository;
     private final RoomQueryService roomQueryService;
     private final RoomInviteService roomInviteService;
+    private final UserMeetingRepository userMeetingRepository;
+    private final MeetingRepository meetingRepository;
 
     @Override
     public List<RoomSummaryResponse> getRoomsOfUser(User user) {
@@ -33,6 +39,7 @@ public class RoomServiceImpl implements RoomService {
                 .stream()
                 .map(UserRoom::getRoom)
                 .map(room -> RoomSummaryResponse.builder()
+                        .roomId(room.getId())
                         .name(room.getName())
                         .hostEmail(room.getHost().getEmail())
                         .description(room.getDescription())
@@ -49,7 +56,7 @@ public class RoomServiceImpl implements RoomService {
                 .collect(Collectors.toList());
 
         return RoomResponse.builder()
-                .id(room.getId())
+                .roomId(room.getId())
                 .name(room.getName())
                 .description(room.getDescription())
                 .createdAt(room.getCreatedAt())
@@ -84,9 +91,20 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException("방장은 회의방을 나갈 수 없습니다.");
         }
 
+        boolean isProposer = userMeetingRepository.existsByMeeting_RoomAndMeeting_Proposer(room, user);
+        if (isProposer) {
+            throw new RuntimeException("회의 제안자는 회의방을 나갈 수 없습니다.");
+        }
+
         UserRoom userRoom = userRoomRepository.findByRoomAndUser(room, user)
                 .orElseThrow(() -> new RuntimeException("참여 기록이 없습니다."));
 
+        List<UserMeeting> meetings = userMeetingRepository.findAllByUserAndMeeting_Room(user, room);
+        for (UserMeeting userMeeting : meetings) {
+            userMeeting.setStatus(InviteStatus.EXITED);
+            userMeeting.setRespondedAt(LocalDateTime.now());
+            userMeetingRepository.save(userMeeting);
+        }
         userRoom.setStatus(InviteStatus.EXITED);
         userRoom.setRespondedAt(LocalDateTime.now());
         userRoomRepository.save(userRoom);
@@ -98,6 +116,22 @@ public class RoomServiceImpl implements RoomService {
         if (!room.getHost().getId().equals(user.getId())) {
             throw new RuntimeException("삭제 권한 없음");
         }
+
+        List<Meeting> meetings = meetingRepository.findAll()
+                .stream()
+                .filter(m -> m.getRoom().getId().equals(roomId))
+                .toList();
+
+        // 🔹 2. 각 회의에 대한 UserMeeting 먼저 삭제
+        for (Meeting meeting : meetings) {
+            userMeetingRepository.deleteAllByMeeting(meeting);
+            meetingRepository.delete(meeting); // 🔹 3. 회의 삭제
+        }
+
+        // 🔹 4. UserRoom 삭제 후 방 삭제
+        userRoomRepository.deleteAllByRoom(room);
+        roomRepository.delete(room);
+
         userRoomRepository.deleteAllByRoom(room);
         roomRepository.delete(room);
     }
@@ -108,7 +142,13 @@ public class RoomServiceImpl implements RoomService {
         if (!room.getHost().getId().equals(user.getId())) {
             throw new RuntimeException("수정 권한 없음");
         }
-        room.setName(request.getName());
+        if (request.getName() != null) {
+            room.setName(request.getName());
+        }
+
+        if (request.getDescription() != null) {
+            room.setDescription(request.getDescription());
+        }
         roomRepository.save(room);
     }
 
