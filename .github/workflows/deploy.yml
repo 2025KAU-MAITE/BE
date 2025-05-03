@@ -66,10 +66,6 @@ jobs:
             echo '[🛑] 기존 자바 프로세스 종료'
             pgrep java | xargs -r kill -15
             sleep 10
-            echo '[📄] GCP 키 파일 저장'
-            echo '${{ secrets.GOOGLE_CREDENTIALS }}' > /home/$EC2_USERNAME/credentials.json
-            echo '[🔗] GCP 키 경로 환경변수 설정'
-            export GOOGLE_APPLICATION_CREDENTIALS=/home/$EC2_USERNAME/credentials.json
             echo '[▶️] Spring Boot 앱 실행'
             nohup java -jar /home/$EC2_USERNAME/app.jar > app.log 2>&1 &
           "
