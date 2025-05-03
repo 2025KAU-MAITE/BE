@@ -12,12 +12,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws-chat").setAllowedOriginPatterns("*").withSockJS();
+        //일반 websocket 연결 허용
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOriginPatterns("*");
+
+        // SockJS를 사용한 websocket 연결 허용
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic"); // 구독 주소
+        registry.enableSimpleBroker("/topic", "/queue"); // 구독 주소 (topic: 그룹, queue: 개인)
         registry.setApplicationDestinationPrefixes("/app"); // 메시지 보낼 주소
+        registry.setUserDestinationPrefix("/user"); // 개인 메시지를 위한 prefix
     }
 }

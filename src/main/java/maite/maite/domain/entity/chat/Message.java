@@ -1,16 +1,14 @@
 package maite.maite.domain.entity.chat;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import maite.maite.domain.entity.User;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +27,8 @@ public class Message {
     //@Column(nullable = false, columnDefinition = "boolean default false")
     //private boolean isRead;
 
-    //private String imageUrl;
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id")

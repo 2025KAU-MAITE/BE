@@ -42,3 +42,20 @@ coolsms:
     secret: ${coolsmsSecret}
   from:
     number: ${coolsmsNum}
+
+# S3
+cloud:
+  aws:
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
+      path :
+        chat: chat
+        profile: profile
+    region:
+      static: ${CLOUD_AWS_REGION}
+    stack:
+      auto: false
+    credentials:
+      accessKey: ${CLOUD_AWS_ACCESS_KEY}
+      secretKey: ${CLOUD_AWS_SECRET_KEY}
+
