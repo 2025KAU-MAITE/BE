@@ -48,7 +48,7 @@ cloud:
   aws:
     s3:
       bucket: ${CLOUD_AWS_S3_BUCKET}
-      path :
+      path:
         chat: chat
         profile: profile
     region:
