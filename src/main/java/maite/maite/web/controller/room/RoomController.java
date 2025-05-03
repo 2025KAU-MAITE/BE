@@ -51,8 +51,6 @@ public class RoomController {
             @RequestBody RoomCreateRequest request
     ) {
         roomService.createRoom(userDetails.getUser(), request);
-        // 호스트 자동 참가
-        //roomInviteService.addHostAsParticipant(room, userDetails.getUser());
         return ResponseEntity.ok().build();
     }
 

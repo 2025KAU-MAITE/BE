@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class RoomResponse {
-    private Long id;
+    private Long roomId;
     private String name;
     private String description;
     private String hostEmail;
