@@ -67,7 +67,7 @@ jobs:
             pgrep java | xargs -r kill -15
             sleep 10
             echo '[📄] GCP 키 파일 저장'
-            echo -e \"${{ secrets.GOOGLE_CREDENTIALS }}\" > /home/$EC2_USERNAME/credentials.json
+            echo \"${{ secrets.GOOGLE_CREDENTIALS }}\" | sed 's/\\\\n/\\n/g' > /home/$EC2_USERNAME/credentials.json
             echo '[🔗] GCP 경로 환경변수 설정'
             export GOOGLE_APPLICATION_CREDENTIALS=/home/$EC2_USERNAME/credentials.json
             echo '[▶️] Spring Boot 앱 실행'
