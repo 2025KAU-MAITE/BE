@@ -9,20 +9,19 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Configuration
 public class GcpConfig {
 
     @Value("${spring.cloud.gcp.credentials.encoded-key}")
-    private String gcpCredentials;
+    private String gcpCredentialsBase64;
 
     @Bean
     public CredentialsProvider credentialsProvider() throws IOException {
+        byte[] decodedBytes = Base64.getDecoder().decode(gcpCredentialsBase64);
         return FixedCredentialsProvider.create(
-                ServiceAccountCredentials.fromStream(
-                        new ByteArrayInputStream(gcpCredentials.getBytes(StandardCharsets.UTF_8))
-                )
+                ServiceAccountCredentials.fromStream(new ByteArrayInputStream(decodedBytes))
         );
     }
 }
