@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.ApiResponse;
 import maite.maite.security.CustomerUserDetails;
-import maite.maite.service.S3Service;
+//import maite.maite.service.S3Service;
 import maite.maite.web.dto.chat.request.MessageRequestDto;
 import maite.maite.web.dto.chat.response.ImageUploadResponseDto;
 import maite.maite.web.dto.chat.response.MessageResponseDto;
@@ -26,7 +26,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final S3Service s3Service;
+    //private final S3Service s3Service;
 
     //메세지 전송 (WebSocket)
     @MessageMapping("/chat.sendMessage/{roomId}")
@@ -45,28 +45,28 @@ public class ChatController {
     }
 
     //이미지 업로드 API
-    @Operation(summary = "채팅방 이미지 업로드 API")
-    @PostMapping("{roomId}/images")
-    public ApiResponse<ImageUploadResponseDto> upLoadImage(
-            @PathVariable Long roomId,
-            @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal CustomerUserDetails userDetails
-            ){
-        Long userId = userDetails.getUser().getId();
-
-        //S3 이미지 업로드
-        String imageUrl = s3Service.uploadChatImage(file, roomId);
-
-        MessageResponseDto message = chatService.sendImageMessage(
-                roomId,
-                userId,
-                imageUrl
-        );
-
-        messagingTemplate.convertAndSend("/topic/chat/" + roomId, message);
-
-        return ApiResponse.onSuccess(new ImageUploadResponseDto(imageUrl));
-    }
+//    @Operation(summary = "채팅방 이미지 업로드 API")
+//    @PostMapping("{roomId}/images")
+//    public ApiResponse<ImageUploadResponseDto> upLoadImage(
+//            @PathVariable Long roomId,
+//            @RequestParam("file") MultipartFile file,
+//            @AuthenticationPrincipal CustomerUserDetails userDetails
+//            ){
+//        Long userId = userDetails.getUser().getId();
+//
+//        //S3 이미지 업로드
+//        String imageUrl = s3Service.uploadChatImage(file, roomId);
+//
+//        MessageResponseDto message = chatService.sendImageMessage(
+//                roomId,
+//                userId,
+//                imageUrl
+//        );
+//
+//        messagingTemplate.convertAndSend("/topic/chat/" + roomId, message);
+//
+//        return ApiResponse.onSuccess(new ImageUploadResponseDto(imageUrl));
+//    }
 
     //채팅방 입장 (WebSocket)
 
