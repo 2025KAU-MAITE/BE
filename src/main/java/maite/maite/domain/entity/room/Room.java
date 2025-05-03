@@ -1,18 +1,19 @@
-package maite.maite.domain.entity;
+package maite.maite.domain.entity.room;
 
 import jakarta.persistence.*;
 import lombok.*;
+import maite.maite.domain.entity.User;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
 
-@Builder
 @Entity
-@Getter
-@Setter
+@Table(name = "room")
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Room {
 
     @Id
@@ -27,13 +28,6 @@ public class Room {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
-    @Builder.Default
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_room",
-            joinColumns = @JoinColumn(name = "room_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private List<User> participants = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id")
