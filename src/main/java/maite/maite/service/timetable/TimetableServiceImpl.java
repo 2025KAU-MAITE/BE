@@ -28,9 +28,13 @@ public class TimetableServiceImpl implements TimetableService{
     private final UserRepository userRepository;
 
     @Override
-    public TimetableResponseDto getTimetable(Long timetableId) {
+    public TimetableResponseDto getTimetable(Long timetableId, Long userId) {
         Timetable timetable = timetableRepository.findById(timetableId)
                 .orElseThrow(() -> new RuntimeException("시간표를 찾을 수 없습니다."));
+
+        if (!timetable.getUser().getId().equals(userId)) {
+            throw new RuntimeException("권한이 없습니다.");
+        }
 
         List<Event> events = eventRepository.findAllByTimetableId(timetableId);
 
@@ -49,15 +53,15 @@ public class TimetableServiceImpl implements TimetableService{
         //시간표 DTO 생성
         return TimetableResponseDto.builder()
                 .id(timetable.getId())
-                .userId(timetable.getUser().getId())
+                .userId(userId)
                 .events(eventDtos)
                 .build();
     }
 
     @Override
     @Transactional
-    public TimetableResponseDto createTimetable(TimetableRequestDto request) {
-        User user = userRepository.findById(request.getUserId())
+    public TimetableResponseDto createTimetable(TimetableRequestDto request, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
         Timetable timetable = Timetable.builder()
@@ -76,7 +80,15 @@ public class TimetableServiceImpl implements TimetableService{
 
     @Override
     @Transactional
-    public void deleteTimetable(Long timetableId) {
+    public void deleteTimetable(Long timetableId, Long userId) {
+
+        Timetable timetable = timetableRepository.findById(timetableId)
+                .orElseThrow(() -> new RuntimeException("시간표를 찾을 수 없습니다."));
+
+        // Check if the timetable belongs to the authenticated user
+        if (!timetable.getUser().getId().equals(userId)) {
+            throw new RuntimeException("권한이 없습니다.");
+        }
         // 시간표에 연결된 모든 이벤트도 함께 삭제됨 (cascade 설정에 따라)
         timetableRepository.deleteById(timetableId);
     }

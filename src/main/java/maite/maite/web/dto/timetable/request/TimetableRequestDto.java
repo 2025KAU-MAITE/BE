@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 public class TimetableRequestDto {
     private String title;
-    private Long userId;
+    //private Long userId;
 }
