@@ -3,6 +3,7 @@ package maite.maite.config;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
@@ -26,5 +27,13 @@ public class SwaggerConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")));
+                        // 파일 업로드 속성
+//                        .addSchemas("FileUpload",
+//                                new Schema<>()
+//                                        .type("object")
+//                                        .addProperties("file",
+//                                                new Schema<>()
+//                                                    .type("string")
+//                                                    .format("binary"))));
     }
 }
