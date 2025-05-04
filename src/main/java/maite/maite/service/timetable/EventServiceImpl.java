@@ -23,14 +23,26 @@ public class EventServiceImpl implements EventService {
     private final TimetableRepository timetableRepository;
 
     @Override
-    public EventResponseDto getEvent(Long eventId) {
+    public EventResponseDto getEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
+
+        if (!event.getTimetable().getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("접근 권한이 없습니다.");
+        }
+
         return convertToEventResponseDto(event);
     }
 
     @Override
-    public List<EventResponseDto> getEventsByTimetable(Long timetableId) {
+    public List<EventResponseDto> getEventsByTimetable(Long timetableId, Long userId) {
+        Timetable timetable = timetableRepository.findById(timetableId)
+                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
+
+        if (!timetable.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("접근 권한이 없습니다.");
+        }
+
         List<Event> events = eventRepository.findByTimetableId(timetableId);
 
         return events.stream()
@@ -40,9 +52,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventResponseDto createEvent(Long timetableId, EventRequestDto request) {
+    public EventResponseDto createEvent(Long timetableId, EventRequestDto request, Long userId) {
         Timetable timetable = timetableRepository.findById(timetableId)
                 .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
+
+        if (!timetable.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("접근 권한이 없습니다.");
+        }
 
         // 시간 충돌 검사
         checkTimeConflict(timetableId, request.getDay(), request.getStartTime(), request.getEndTime(), null);
@@ -63,9 +79,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventResponseDto updateEvent(Long eventId, EventRequestDto request) {
+    public EventResponseDto updateEvent(Long eventId, EventRequestDto request, Long userId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
+
+        // Verify event belongs to the user
+        if (!event.getTimetable().getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("접근 권한이 없습니다.");
+        }
 
         // 시간 충돌 검사
         checkTimeConflict(event.getTimetable().getId(), request.getDay(), request.getStartTime(), request.getEndTime(), eventId);
@@ -81,9 +102,14 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public void deleteEvent(Long eventId) {
+    public void deleteEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
+
+        if (!event.getTimetable().getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("접근 권한이 없습니다.");
+        }
+
         eventRepository.delete(event);
     }
 
