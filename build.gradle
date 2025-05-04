@@ -50,6 +50,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 
 	// S3 설정
+	// Spring Boot 3.x 호환 AWS S3 의존성 추가
+	//implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.0.3'
+	//implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.0.3'
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
 	//테스트용 thymeleaf
