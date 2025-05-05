@@ -62,10 +62,10 @@ public class TimetableServiceImpl implements TimetableService{
     @Override
     public TimetableResponseDto getTimetable(Long timetableId, Long userId) {
         Timetable timetable = timetableRepository.findById(timetableId)
-                .orElseThrow(() -> new RuntimeException("시간표를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
 
         if (!timetable.getUser().getId().equals(userId)) {
-            throw new RuntimeException("권한이 없습니다.");
+            throw new IllegalArgumentException("권한이 없습니다.");
         }
 
         List<Event> events = eventRepository.findAllByTimetableId(timetableId);
@@ -94,7 +94,7 @@ public class TimetableServiceImpl implements TimetableService{
     @Transactional
     public TimetableResponseDto createTimetable(TimetableRequestDto request, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Timetable timetable = Timetable.builder()
                 .title(request.getTitle())
@@ -115,11 +115,11 @@ public class TimetableServiceImpl implements TimetableService{
     public void deleteTimetable(Long timetableId, Long userId) {
 
         Timetable timetable = timetableRepository.findById(timetableId)
-                .orElseThrow(() -> new RuntimeException("시간표를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
 
         // Check if the timetable belongs to the authenticated user
         if (!timetable.getUser().getId().equals(userId)) {
-            throw new RuntimeException("권한이 없습니다.");
+            throw new IllegalArgumentException("권한이 없습니다.");
         }
         // 시간표에 연결된 모든 이벤트도 함께 삭제됨 (cascade 설정에 따라)
         timetableRepository.deleteById(timetableId);
