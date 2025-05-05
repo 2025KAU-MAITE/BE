@@ -36,7 +36,7 @@ public class EventController {
     @Operation(summary = "일정 조회 API")
     @GetMapping("/event/{eventId}")
     public ApiResponse<EventResponseDto> getEvent(
-            //@PathVariable Long timetableId,
+            @PathVariable Long timetableId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
@@ -60,7 +60,7 @@ public class EventController {
     @Operation(summary = "일정 수정 API")
     @PatchMapping("/event/{eventId}")
     public ApiResponse<EventResponseDto> updateEvent(
-            //@PathVariable Long timetableId,
+            @PathVariable Long timetableId,
             @PathVariable Long eventId,
             @RequestBody EventRequestDto request,
             @AuthenticationPrincipal CustomerUserDetails userDetails
@@ -73,7 +73,7 @@ public class EventController {
     @Operation(summary = "일정 삭제 API")
     @DeleteMapping("/event/{eventId}")
     public ApiResponse<Void> deleteEvent(
-            //@PathVariable Long timetableId,
+            @PathVariable Long timetableId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){

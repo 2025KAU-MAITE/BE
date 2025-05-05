@@ -12,6 +12,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/timetables")
 @RequiredArgsConstructor
@@ -20,8 +22,18 @@ public class TimetableController {
 
     private final TimetableService timetableService;
 
+    // 자기 시간표 조회 API
+    @Operation(summary = "자기 시간표 조회 API")
+    @GetMapping("/my")
+    public ApiResponse<List<TimetableResponseDto>> getMyTimetables(
+            @AuthenticationPrincipal CustomerUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        return ApiResponse.onSuccess(timetableService.getTimetablesByUserId(userId));
+    }
+
     // 시간표 조회 API
-    @Operation(summary = "시간표 조회 API")
+    @Operation(summary = "타 유저 시간표 조회 API")
     @GetMapping("/{timetableId}")
     public ApiResponse<TimetableResponseDto> getTimetable(
             @PathVariable Long timetableId,

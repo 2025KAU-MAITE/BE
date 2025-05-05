@@ -28,6 +28,38 @@ public class TimetableServiceImpl implements TimetableService{
     private final UserRepository userRepository;
 
     @Override
+    //@Transactional(readOnly = true)
+    public List<TimetableResponseDto> getTimetablesByUserId(Long userId) {
+        List<Timetable> timetables = timetableRepository.findByUserId(userId);
+
+        return timetables.stream()
+                .map(timetable -> {
+                    List<Event> events = eventRepository.findAllByTimetableId(timetable.getId());
+
+                    // 이벤트 DTO 리스트 생성
+                    List<EventResponseDto> eventDtos = events.stream()
+                            .map(event -> EventResponseDto.builder()
+                                    .id(event.getId())
+                                    .title(event.getTitle())
+                                    .day(event.getDay())
+                                    .place(event.getPlace())
+                                    .startTime(event.getStartTime())
+                                    .endTime(event.getEndTime())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    // 시간표 DTO 생성
+                    return TimetableResponseDto.builder()
+                            .id(timetable.getId())
+                            .userId(timetable.getUser().getId())
+                            .events(eventDtos)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
     public TimetableResponseDto getTimetable(Long timetableId, Long userId) {
         Timetable timetable = timetableRepository.findById(timetableId)
                 .orElseThrow(() -> new RuntimeException("시간표를 찾을 수 없습니다."));
