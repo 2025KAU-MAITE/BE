@@ -64,6 +64,10 @@ dependencies {
 	//googleSpeech
 	implementation 'com.google.cloud:google-cloud-speech:4.55.0'
 
+	//google text-to-speech
+	implementation 'com.google.cloud:google-cloud-texttospeech:2.31.0'
+
+
 	//gcs
 	implementation 'com.google.cloud:google-cloud-storage:2.27.0'
 

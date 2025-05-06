@@ -1,4 +1,4 @@
-package maite.maite.service;
+package maite.maite.service.AI;
 
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.longrunning.OperationFuture;
@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.google.cloud.storage.*;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -17,6 +18,10 @@ public class SpeechToTextService {
 
     @Autowired
     private CredentialsProvider credentialsProvider;
+
+    @Autowired
+    private ConvertToWavService convertToWavService;
+
     private SpeechClient createSpeechClient() throws Exception {
         return SpeechClient.create(
                 SpeechSettings.newBuilder()
@@ -28,8 +33,10 @@ public class SpeechToTextService {
     public String transcribe(MultipartFile file) throws Exception {
         try (SpeechClient speechClient = createSpeechClient()) {
 
+            // 0. WAV로 변환
+            File wavFile = convertToWavService.convertToWav(file);
             // 1. GCS에 업로드
-            String gcsUri = uploadToGCS(file, "maite_audio_bucket");  // 버킷 이름 하드코딩 또는 주입
+            String gcsUri = uploadToGCS(wavFile, "maite_audio_bucket");
 
             // 2. GCS URI를 Audio로 설정
             RecognitionAudio audio = RecognitionAudio.newBuilder()
@@ -58,8 +65,8 @@ public class SpeechToTextService {
     }
 
 
-    public String uploadToGCS(MultipartFile file, String bucketName) throws IOException {
-        String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
+    public String uploadToGCS(File file, String bucketName) throws IOException {
+        String fileName = UUID.randomUUID() + "-" + file.getName();
 
         Storage storage = StorageOptions.newBuilder()
                 .setCredentials(credentialsProvider.getCredentials())  // 주입받은 CredentialsProvider 사용
@@ -67,9 +74,9 @@ public class SpeechToTextService {
                 .getService();
 
         BlobId blobId = BlobId.of(bucketName, fileName);
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(file.getContentType()).build();
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("audio/wav").build();
 
-        storage.create(blobInfo, file.getBytes());
+        storage.create(blobInfo, java.nio.file.Files.readAllBytes(file.toPath()));
         return String.format("gs://%s/%s", bucketName, fileName);
     }
 }
