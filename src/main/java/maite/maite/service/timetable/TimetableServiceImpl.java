@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import maite.maite.domain.entity.User;
 import maite.maite.domain.entity.timetable.Event;
 import maite.maite.domain.entity.timetable.Timetable;
+import maite.maite.repository.MateRepository;
 import maite.maite.repository.UserRepository;
 import maite.maite.repository.timetable.EventRepository;
 import maite.maite.repository.timetable.TimetableRepository;
@@ -12,6 +13,7 @@ import maite.maite.web.dto.timetable.request.EventRequestDto;
 import maite.maite.web.dto.timetable.request.TimetableRequestDto;
 import maite.maite.web.dto.timetable.response.EventResponseDto;
 import maite.maite.web.dto.timetable.response.TimetableResponseDto;
+import maite.maite.web.dto.timetable.response.UserTimetableResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,9 +28,10 @@ public class TimetableServiceImpl implements TimetableService{
     private final TimetableRepository timetableRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final MateRepository mateRepository;
 
     @Override
-    //@Transactional(readOnly = true)
+    @Transactional
     public List<TimetableResponseDto> getTimetablesByUserId(Long userId) {
         List<Timetable> timetables = timetableRepository.findByUserId(userId);
 
@@ -56,6 +59,44 @@ public class TimetableServiceImpl implements TimetableService{
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserTimetableResponseDto getTimetableByEmail(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        List<Timetable> timetables = timetableRepository.findByUserId(user.getId());
+
+        if (timetables.isEmpty()) {
+            throw new IllegalArgumentException("해당 사용자의 시간표가 없습니다.");
+        }
+
+        Timetable timetable = timetables.get(0);
+        List<Event> events = eventRepository.findByTimetableId(timetable.getId());
+
+        List<EventResponseDto> eventDtos = events.stream()
+                .map(event -> EventResponseDto.builder()
+                        .id(event.getId())
+                        .title(event.getTitle())
+                        .day(event.getDay())
+                        .place(event.getPlace())
+                        .startTime(event.getStartTime())
+                        .endTime(event.getEndTime())
+                        .build())
+                .collect(Collectors.toList());
+
+        //친구 수
+        int mateCount = mateRepository.findAllByUser(user).size();
+
+        return UserTimetableResponseDto.builder()
+                .timetableId(timetable.getId())
+                .userId(user.getId())
+                .userName(user.getName())
+                //.userEmail(user.getEmail())
+                .mateCount(mateCount)
+                .events(eventDtos)
+                .build();
     }
 
 
