@@ -8,6 +8,7 @@ import maite.maite.security.CustomerUserDetails;
 import maite.maite.service.timetable.TimetableService;
 import maite.maite.web.dto.timetable.request.TimetableRequestDto;
 import maite.maite.web.dto.timetable.response.TimetableResponseDto;
+import maite.maite.web.dto.timetable.response.UserTimetableResponseDto;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -34,13 +35,13 @@ public class TimetableController {
 
     // 시간표 조회 API
     @Operation(summary = "타 유저 시간표 조회 API")
-    @GetMapping("/{timetableId}")
-    public ApiResponse<TimetableResponseDto> getTimetable(
-            @PathVariable Long timetableId,
+    @GetMapping("/users/{userEmail}")
+    public ApiResponse<UserTimetableResponseDto> getTimetableByEmail(
+            @PathVariable String userEmail,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
         Long userId = userDetails.getUser().getId();
-        return ApiResponse.onSuccess(timetableService.getTimetable(timetableId, userId));
+        return ApiResponse.onSuccess(timetableService.getTimetableByEmail(userEmail));
     }
 
     //시간표 생성 API
