@@ -73,7 +73,7 @@ public class TimetableServiceImpl implements TimetableService{
         }
 
         Timetable timetable = timetables.get(0);
-        List<Event> events = eventRepository.findAllByTimetableId(timetable.getId());
+        List<Event> events = eventRepository.findByTimetableId(timetable.getId());
 
         List<EventResponseDto> eventDtos = events.stream()
                 .map(event -> EventResponseDto.builder()
