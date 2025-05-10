@@ -10,6 +10,7 @@ import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.security.JwtTokenProvider;
+import maite.maite.service.S3Service;
 import maite.maite.service.auth.AuthService;
 import maite.maite.service.auth.SmsService;
 import maite.maite.service.auth.VerificationService;
@@ -26,9 +27,11 @@ import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import maite.maite.web.dto.User.Signup.SignupResponseDTO;
 import maite.maite.web.dto.User.Signup.SignupVerifyResponseDTO;
 import maite.maite.web.dto.User.Signup.SocialSignupResponseDTO;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -44,21 +47,14 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
     private final VerificationService verificationService;
-
+    private final S3Service s3Service;
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입 API", description = "회원가입")
     public ApiResponse<SignupResponseDTO.SignupResponse> signup(
-            @Parameter(description = "회원가입 입력") @RequestBody SignupRequestDTO signupRequestDTO
+            @RequestBody SignupRequestDTO signupRequestDTO
     ) {
-        String email = signupRequestDTO.getEmail();
-        String password = signupRequestDTO.getPassword();
-        String name = signupRequestDTO.getName();
-        String phonenumber = signupRequestDTO.getPhonenumber();
-        String address = signupRequestDTO.getAddress();
-
-        SignupRequestDTO request = new SignupRequestDTO(email, password, name, phonenumber, address);
-        User user = authService.signup(request);
+        User user = authService.signup(signupRequestDTO);
         SignupResponseDTO.SignupResponse response = SignupResponseDTO.SignupResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
@@ -68,6 +64,13 @@ public class AuthController {
                 .message("회원가입이 성공적으로 완료되었습니다.")
                 .build();
         return ApiResponse.onSuccess(response);
+    }
+
+    @PostMapping(value = "/signup/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "회원가입용 프로필 이미지 업로드", description = "S3에 프로필 이미지를 업로드하고 URL을 반환합니다.")
+    public ApiResponse<String> uploadProfileImage(@RequestParam MultipartFile file) {
+        String imageUrl = s3Service.uploadProfileImage(file);
+        return ApiResponse.onSuccess(imageUrl);
     }
 
     @PostMapping("/signup/send-code")
@@ -204,8 +207,8 @@ public class AuthController {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("인증 필요"));
-        String encodedPasword = passwordEncoder.encode(password);
-        user.setPassword(encodedPasword);
+        String encodedPassword = passwordEncoder.encode(password);
+        user.setPassword(encodedPassword);
         userRepository.save(user);
         return ApiResponse.onSuccess("비밀번호 변경 성공");
     }
@@ -213,20 +216,21 @@ public class AuthController {
     @PostMapping("/reset-password/send-code")
     @Operation(summary = "인증번호 발송(비밀번호 재설정) API", description = "비밀번호 재설정 인증번호 발송")
     public ApiResponse<ResetPasswordDTO.sendCodeForResetPasswordDto> sendVerificationCodeForResetPassword(
-            @Parameter(description = "이름") @RequestBody FindResponseDTO.sendCodeRequestForPass request
+            @Parameter(description = "비밀번호 재설정") @RequestBody FindResponseDTO.sendCodeRequestForPass request
     ) {
         String name = request.getName();
+        String email = request.getEmail();
         String phonenumber = request.getPhonenumber();
 
-        User user = userRepository.findByNameAndPhonenumber(name, phonenumber)
-                .orElseThrow(() -> new CommonExceptionHandler(USER_NOT_FOUND_FOR_FIND_EMAIL));
+        User user = userRepository.findByNameAndEmail(name, email)
+                .orElseThrow(() -> new CommonExceptionHandler(USER_NOT_FOUND_FOR_RESET_PASSWORD));
 
         if (user.getEmail().equals(request.getEmail())) {
-            String verifcationCode = smsService.generateVerificationCode();
-            boolean isSent = smsService.sendVerificationSms(phonenumber, verifcationCode);
+            String verificationCode = smsService.generateVerificationCode();
+            boolean isSent = smsService.sendVerificationSms(phonenumber, verificationCode);
 
             if (isSent) {
-                verificationService.saveVerification(phonenumber, verifcationCode, 5);
+                verificationService.saveVerification(phonenumber, verificationCode, 5);
                 ResetPasswordDTO.sendCodeForResetPasswordDto response = new ResetPasswordDTO.sendCodeForResetPasswordDto("인증번호가 발송됭었습니다");
                 return ApiResponse.onSuccess(response);
             } else {
