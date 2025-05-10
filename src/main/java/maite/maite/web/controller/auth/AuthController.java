@@ -2,6 +2,7 @@ package maite.maite.web.controller.auth;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.ApiResponse;
 import maite.maite.apiPayload.exception.handler.CommonExceptionHandler;
@@ -36,6 +37,7 @@ import static maite.maite.apiPayload.code.status.ErrorStatus.*;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "AUTH", description = "회원 관련 API")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;

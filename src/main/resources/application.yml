@@ -22,8 +22,7 @@ spring:
   cloud:
     gcp:
       credentials:
-        encoded-key: ${GoogleCredentials}
-      project-id: ${ProjectId}
+        encoded-key: ${encodedKey}
 
 openai:
   api:
