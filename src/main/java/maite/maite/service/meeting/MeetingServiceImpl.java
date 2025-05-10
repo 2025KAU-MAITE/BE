@@ -10,10 +10,14 @@ import maite.maite.domain.entity.room.UserRoom;
 import maite.maite.repository.UserRepository;
 import maite.maite.repository.meeting.MeetingRepository;
 import maite.maite.repository.meeting.UserMeetingRepository;
+import maite.maite.service.map.NaverMapService;
 import maite.maite.service.meeting.MeetingInviteService;
 import maite.maite.service.meeting.MeetingQueryService;
 import maite.maite.service.meeting.MeetingService;
 import maite.maite.service.room.RoomQueryService;
+import maite.maite.web.dto.map.response.CafeResponse;
+import maite.maite.web.dto.map.response.GeocodeResponse;
+import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,6 +42,7 @@ public class MeetingServiceImpl implements MeetingService {
     private final MeetingQueryService meetingQueryService;
     private final RoomQueryService roomQueryService;
     private final MeetingInviteService meetingInviteService;
+    private final NaverMapService naverMapService;
 
     // ✅ 1. 내가 속한 회의 목록 조회
     @Override
@@ -107,7 +113,6 @@ public class MeetingServiceImpl implements MeetingService {
                 .proposer(proposer)
                 .meetingDate(LocalDate.parse(req.getMeetingDate()))
                 .meetingTime(LocalTime.parse(req.getMeetingTime()))
-                .address(req.getAddress())
                 .build();
         meeting = meetingRepository.save(meeting);
 
@@ -164,5 +169,64 @@ public class MeetingServiceImpl implements MeetingService {
         }
         userMeetingRepository.deleteAllByMeeting(meeting);
         meetingRepository.delete(meeting);
+    }
+
+    @Transactional
+    public void saveParticipantAddress(Long meetingId, User user, MeetingAddressRequest address) {
+        Meeting meeting = meetingQueryService.findMeetingById(meetingId);
+
+        UserMeeting userMeeting = userMeetingRepository.findByMeetingAndUser(meeting, user)
+                .orElseThrow(() -> new RuntimeException("회의에 참여한 사용자만 주소를 등록할 수 있습니다."));
+
+        userMeeting.setAddress(address.getAddress());
+        //userMeeting.setRespondedAt(LocalDateTime.now()); // 응답 기록
+        userMeetingRepository.save(userMeeting);
+    }
+
+    public List<CafeResponse> findMeetingNearbyCafes(Long meetingId) {
+        Meeting meeting = meetingQueryService.findMeetingById(meetingId);
+
+        List<UserMeeting> participants = userMeetingRepository.findAllByMeetingAndStatus(
+                meeting, InviteStatus.ACCEPTED
+        );
+
+        List<double[]> coordinates = new ArrayList<>();
+
+
+        for (UserMeeting participant : participants) {
+            String addr = participant.getAddress();
+            if (addr != null && !addr.isBlank()) {
+                try {
+                    GeocodeResponse.Address geo = naverMapService.getCoordinatesFromAddress(addr);
+                    coordinates.add(new double[]{Double.parseDouble(geo.getY()), Double.parseDouble(geo.getX())});
+                } catch (Exception e) {
+                    // 좌표 변환 실패한 주소는 제외
+                }
+            }
+        }
+
+        if (coordinates.isEmpty()) {
+            throw new IllegalStateException("좌표를 얻을 수 있는 주소가 없습니다.");
+        }
+
+        double maxDistance = 0;
+        for (int i = 0; i < coordinates.size(); i++) {
+            for (int j = i + 1; j < coordinates.size(); j++) {
+                double[] a = coordinates.get(i);
+                double[] b = coordinates.get(j);
+                double distance = naverMapService.calculateDistance(a[0], a[1], b[0], b[1]);
+                maxDistance = Math.max(maxDistance, distance);
+            }
+        }
+        if (maxDistance >= 100) {
+            throw new IllegalStateException("참여자 간 거리가 100km 이상 떨어져 있어 중심지 계산이 불가능합니다.");
+        }
+
+        double avgLat = coordinates.stream().mapToDouble(coord -> coord[0]).average().orElseThrow();
+        double avgLng = coordinates.stream().mapToDouble(coord -> coord[1]).average().orElseThrow();
+
+        String locationName = naverMapService.getLocationNameFromCoordinates(avgLat, avgLng);
+
+        return naverMapService.getNearbyCafes(locationName);
     }
 }

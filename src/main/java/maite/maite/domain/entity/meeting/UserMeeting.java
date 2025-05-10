@@ -30,6 +30,8 @@ public class UserMeeting {
     @Column(nullable = false)
     private InviteStatus status; // PENDING, ACCEPTED, REJECTED, EXITED
 
+    private String address;
+
     @Column(nullable = false)
     private LocalDateTime invitedAt;
 

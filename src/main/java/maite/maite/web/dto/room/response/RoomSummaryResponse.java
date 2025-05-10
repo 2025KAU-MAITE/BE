@@ -15,6 +15,7 @@ import java.util.List;
 public class RoomSummaryResponse {
     private Long roomId;
     private String name;
+    private String hostName;
     private String hostEmail;
     private String description;
 }

@@ -73,6 +73,9 @@ dependencies {
 	//spring gcp
 	implementation 'org.springframework.cloud:spring-cloud-gcp-starter:1.2.8.RELEASE'
 
+	//naver maps
+//	implementation 'org.springframework.boot:spring-boot-starter-web'
+//	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
 tasks.named('test') {
