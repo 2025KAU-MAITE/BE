@@ -5,16 +5,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserSearchResponseDto {
-    private Long id;
+public class PendingMateResponseDto {
+    private Long requestId;
+    private Long userId;
     private String name;
     private String email;
     private String profileImageUrl;
-    private boolean isMate;
-    private boolean isPendingSent;
-    private boolean isPendingReceived;
+    private LocalDateTime createdAt;
 }

@@ -2,6 +2,7 @@ package maite.maite.service.timetable;
 
 import com.sun.jdi.request.EventRequest;
 import lombok.RequiredArgsConstructor;
+import maite.maite.domain.Enum.MateStatus;
 import maite.maite.domain.entity.User;
 import maite.maite.domain.entity.timetable.Event;
 import maite.maite.domain.entity.timetable.Timetable;
@@ -87,7 +88,7 @@ public class TimetableServiceImpl implements TimetableService{
                 .collect(Collectors.toList());
 
         //친구 수
-        int mateCount = mateRepository.findAllByUser(user).size();
+        int mateCount = mateRepository.findAllByUserAndStatus(user, MateStatus.ACCEPTED).size();
 
         return UserTimetableResponseDto.builder()
                 .timetableId(timetable.getId())
