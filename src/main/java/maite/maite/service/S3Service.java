@@ -59,10 +59,9 @@ public class S3Service {
      * 프로필 이미지를 S3에 업로드
      *
      * @param file 업로드할 프로필 이미지
-     * @param userId 사용자 ID
      * @return 업로드된 이미지의 URL
      */
-    public String uploadProfileImage(MultipartFile file, Long userId) {
+    public String uploadProfileImage(MultipartFile file) {
         try {
             // 고유한 파일명 생성
             String uuid = generateUniqueUuid();
@@ -71,9 +70,8 @@ public class S3Service {
             String extension = getFileExtension(file.getOriginalFilename());
 
             // S3 경로 구성: 프로필 경로/사용자ID/UUID.확장자
-            String keyName = String.format("%s/%d/%s%s",
+            String keyName = String.format("%s/%s%s",
                     amazonConfig.getProfilePath(),
-                    userId,
                     uuid,
                     extension);
 
