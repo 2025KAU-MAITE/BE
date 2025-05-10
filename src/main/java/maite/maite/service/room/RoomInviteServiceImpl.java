@@ -128,6 +128,7 @@ public class RoomInviteServiceImpl implements RoomInviteService {
                     return RoomSummaryResponse.builder()
                             .roomId(room.getId())
                             .name(room.getName())
+                            .hostName(room.getHost().getName())
                             .hostEmail(room.getHost().getEmail())
                             .description(room.getDescription())
                             .build();

@@ -3,8 +3,12 @@ package maite.maite.web.controller.meeting;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.*;
+import maite.maite.domain.entity.User;
+import maite.maite.domain.entity.meeting.UserMeeting;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.service.meeting.MeetingService;
+import maite.maite.web.dto.map.response.CafeResponse;
+import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
@@ -77,5 +81,23 @@ public class MeetingController {
             @AuthenticationPrincipal CustomerUserDetails userDetails) {
         meetingService.leaveMeeting(meetingId, userDetails.getUser());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "원하는 주소 입력")
+    @PostMapping("/{meetingId}/address")
+    public ResponseEntity<Void> setMyMeetingAddress(@PathVariable Long meetingId,
+                                                    @RequestBody MeetingAddressRequest address,
+                                                    @AuthenticationPrincipal CustomerUserDetails userDetails) {
+        meetingService.saveParticipantAddress(meetingId, userDetails.getUser(), address);
+        return ResponseEntity.ok().build();
+    }
+
+
+    // ✅ 회의 주변 카페 검색
+    @Operation(summary = "중심 위치 찾기")
+    @GetMapping("/{meetingId}/cafes")
+    public ResponseEntity<List<CafeResponse>> getNearbyCafes(@PathVariable Long meetingId) {
+        List<CafeResponse> cafes = meetingService.findMeetingNearbyCafes(meetingId);
+        return ResponseEntity.ok(cafes);
     }
 }

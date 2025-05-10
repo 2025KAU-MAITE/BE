@@ -28,6 +28,14 @@ openai:
   api:
     key: ${OpenAIKey}
 
+naver:
+  map:
+    client-id: ${NaverMapId}
+    client-secret: ${NaverMapSecret}
+  search:
+    client-id: ${NaverId}
+    client-secret: ${NaverSecret}
+
 springdoc:
   api-docs:
     enabled: true
@@ -46,7 +54,6 @@ coolsms:
     secret: ${coolsmsSecret}
   from:
     number: ${coolsmsNum}
-
 # S3
 cloud:
   aws:
@@ -62,4 +69,3 @@ cloud:
     credentials:
       accessKey: ${CLOUD_AWS_ACCESS_KEY}
       secretKey: ${CLOUD_AWS_SECRET_KEY}
-
