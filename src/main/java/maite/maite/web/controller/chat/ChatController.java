@@ -1,6 +1,7 @@
 package maite.maite.web.controller.chat;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.ApiResponse;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import maite.maite.service.chat.ChatService;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -74,5 +77,16 @@ public class ChatController {
 
 
     //채팅 내역 조회
-
+    @Operation(summary = "채팅 내역 조회 API", description = "특정 채팅방의 메시지 내역을 조회합니다")
+    @GetMapping("/{roomId}/messages")
+    public ApiResponse<List<MessageResponseDto>> getChatMessages(
+            @PathVariable Long roomId,
+            @Parameter(description = "마지막으로 받은 메시지의  ID (이 ID보다 이전 메시지를 가져옴)")
+            @RequestParam(required = false) Long lastMessageId,
+            @AuthenticationPrincipal CustomerUserDetails userDetails
+    ) {
+        Long userId = userDetails.getUser().getId();
+        List<MessageResponseDto> messages = chatService.getChatMessages(roomId, userId, lastMessageId);
+        return ApiResponse.onSuccess(messages);
+    }
 }

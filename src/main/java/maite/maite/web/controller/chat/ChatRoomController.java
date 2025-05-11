@@ -84,7 +84,6 @@ public class ChatRoomController {
     }
 
     //채팅방 초대
-    //
     @Operation(summary = "채팅방 초대 API")
     @PostMapping("/{roomId}/invite")
     public ApiResponse<Void> inviteUserToChatRoom(
