@@ -12,12 +12,15 @@ import maite.maite.repository.chat.ChatRoomUserRepository;
 import maite.maite.repository.chat.MessageRepository;
 import maite.maite.web.dto.chat.response.ChatRoomResponseDto;
 import maite.maite.web.dto.chat.response.MessageResponseDto;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,8 @@ public class ChatServiceImpl implements ChatService {
     private final UserRepository userRepository;
     private final ChatRoomUserRepository chatRoomUserRepository;
     private final MessageRepository messageRepository;
+
+    private static final int MESSAGE_PAGE_SIZE = 30;
 
     // 개인 채팅방 생성
     @Override
@@ -326,7 +331,7 @@ public class ChatServiceImpl implements ChatService {
         // 메시지 생성 (이미지만 있는 경우)
         Message message = Message.builder()
                 .content(null)
-                //.imageUrl(imageUrl)
+                .imageUrl(imageUrl)
                 .sender(sender)
                 .chatRoom(chatRoom)
                 .sendAt(LocalDateTime.now())
@@ -343,11 +348,42 @@ public class ChatServiceImpl implements ChatService {
                 .roomId(roomId)
                 .senderId(senderId)
                 .senderName(sender.getName())
-                //.senderProfileImageUrl(sender.getProfileImageUrl())
+                .senderProfileImageUrl(sender.getProfileImageUrl())
                 .content(null)
                 .imageUrl(message.getImageUrl())
                 .sendAt(message.getSendAt())
                 .isRead(false)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MessageResponseDto> getChatMessages(Long roomId, Long userId, Long lastMessageId) {
+        if (!chatRoomUserRepository.existsByChatRoomIdAndUserId(roomId, userId)) {
+            throw new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다.");
+        }
+
+        Pageable pageable = PageRequest.of(0, MESSAGE_PAGE_SIZE);
+
+        List<Message> messages;
+        if (lastMessageId != null) {
+            messages = messageRepository.findByChatRoomIdAndIdLessThanOrderByIdDesc(roomId, lastMessageId, pageable);
+        } else {
+            messages = messageRepository.findByChatRoomIdOrderByIdDesc(roomId, pageable);
+        }
+
+        return messages.stream()
+                .map(message -> MessageResponseDto.builder()
+                        .id(message.getId())
+                        .roomId(roomId)
+                        .senderId(message.getSender().getId())
+                        .senderName(message.getSender().getName())
+                        .senderProfileImageUrl(message.getSender().getProfileImageUrl())
+                        .content(message.getContent())
+                        .imageUrl(message.getImageUrl())
+                        .sendAt(message.getSendAt())
+                        .isRead(false) // 읽음 상태 처리
+                        .build())
+                .collect(Collectors.toList());
     }
 }

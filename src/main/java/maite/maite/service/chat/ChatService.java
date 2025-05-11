@@ -17,7 +17,7 @@ public interface ChatService {
     void leaveChatRoom(Long userId, Long roomId);
     void deleteChatRoom(Long userId, Long roomId);
     void inviteUserChatRoom(Long userId, Long roomId, List<Long> userIds);
-
+    List<MessageResponseDto> getChatMessages(Long roomId, Long userId, Long lastMessageId);
     //메세지 관련
     MessageResponseDto sendTextMessage(Long roomId, Long userId, String content);
     MessageResponseDto sendImageMessage(Long roomId, Long userId, String imageUrl);
