@@ -1,9 +1,6 @@
 package maite.maite.config;
 
 import lombok.RequiredArgsConstructor;
-import maite.maite.apiPayload.exception.handler.OAuth2AuthenticationFailureHandler;
-import maite.maite.apiPayload.exception.handler.OAuth2AuthenticationSuccessHandler;
-import maite.maite.security.CustomOAuth2UserService;
 import maite.maite.security.CustomerUserDetailsService;
 import maite.maite.security.JwtAuthenticationFilter;
 import maite.maite.security.JwtTokenProvider;
@@ -21,10 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
-     private final CustomOAuth2UserService customOAuth2UserService;
-     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider, CustomerUserDetailsService customerUserDetailsService) throws Exception {
@@ -42,11 +35,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form.disable())
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                        .failureHandler(oAuth2AuthenticationFailureHandler))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customerUserDetailsService), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

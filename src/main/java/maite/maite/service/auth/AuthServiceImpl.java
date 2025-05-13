@@ -1,18 +1,23 @@
 package maite.maite.service.auth;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.exception.handler.CommonExceptionHandler;
 import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
+import maite.maite.security.GoogleTokenUtil;
 import maite.maite.security.JwtTokenProvider;
-import maite.maite.service.S3Service;
+import maite.maite.web.dto.User.Login.GoogleLoginRequest;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResult;
 import maite.maite.web.dto.User.Signup.SignupRequestDTO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
+import static maite.maite.apiPayload.code.status.ErrorStatus.MEMBER_NOT_FOUND;
 import static maite.maite.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND_FOR_FIND_EMAIL;
 
 @Service
@@ -21,6 +26,7 @@ public class AuthServiceImpl implements AuthService{
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleTokenUtil googleTokenUtil;
 
     public boolean isDuplicated(String email) {
         return userRepository.findByEmail(email).isPresent();
@@ -64,6 +70,25 @@ public class AuthServiceImpl implements AuthService{
         LoginResult result = new LoginResult(user, accessToken);
 
         return result;
+    }
+
+    public LoginResult googleLogin(GoogleLoginRequest googleLoginRequest) {
+        GoogleIdToken.Payload payload = googleTokenUtil.verifyIdToken(googleLoginRequest.getIdToken());
+        String email = payload.getEmail();
+
+        Optional<User> user = userRepository.findByEmail(email);
+
+        if (user.isPresent()) {
+            String accessToken = jwtTokenProvider.createToken(user.get().getEmail());
+            String refreshToken = jwtTokenProvider.createRefreshToken(user.get().getEmail());
+            user.get().setRefreshToken(refreshToken);
+            userRepository.save(user.get());
+
+            LoginResult result = new LoginResult(user.get(), accessToken);
+            return result;
+        } else {
+            throw new CommonExceptionHandler(MEMBER_NOT_FOUND);
+        }
     }
 
     public String reissueAccessToken(String refreshToken) {

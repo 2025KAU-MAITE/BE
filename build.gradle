@@ -72,10 +72,12 @@ dependencies {
 	implementation 'com.google.cloud:google-cloud-storage:2.27.0'
 
 	//protobuf
-	implementation 'com.google.protobuf:protobuf-java:3.25.1'
+	implementation 'com.google.protobuf:protobuf-java:4.28.2'
 
 	//spring gcp
 	implementation 'org.springframework.cloud:spring-cloud-gcp-starter:1.2.8.RELEASE'
+
+	implementation 'com.google.api-client:google-api-client:2.5.0'
 
 	//naver maps
 //	implementation 'org.springframework.boot:spring-boot-starter-web'

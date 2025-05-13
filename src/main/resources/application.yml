@@ -8,13 +8,6 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GoogleOAuthId}
-            client-secret: ${GoogleOAuthPassword}
   servlet:
     multipart:
       max-file-size: 100MB
@@ -27,6 +20,10 @@ spring:
 openai:
   api:
     key: ${OpenAIKey}
+
+oauth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
 
 naver:
   map:

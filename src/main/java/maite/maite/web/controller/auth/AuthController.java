@@ -18,6 +18,7 @@ import maite.maite.service.auth.VerificationService;
 import maite.maite.web.dto.User.*;
 import maite.maite.web.dto.User.Find.FindResponseDTO;
 import maite.maite.web.dto.User.Find.ResetPasswordDTO;
+import maite.maite.web.dto.User.Login.GoogleLoginRequest;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResponse;
 import maite.maite.web.dto.User.Login.LoginResult;
@@ -141,6 +142,19 @@ public class AuthController {
 
         LoginRequest request = new LoginRequest(email, password);
         LoginResult result = authService.login(request);
+        LoginResponse response = LoginResponse.builder()
+                .accessToken(result.getAccessToken())
+                .message("로그인되었습니다.")
+                .build();
+        return ApiResponse.onSuccess(response);
+    }
+
+    @PostMapping("/login-google")
+    @Operation(summary = "구글 로그인 API", description = "로그인")
+    public ApiResponse<LoginResponse> googleLogin(
+            @Parameter(description = "구글 로그인") @RequestBody GoogleLoginRequest googleLoginRequest
+    ) {
+        LoginResult result = authService.googleLogin(googleLoginRequest);
         LoginResponse response = LoginResponse.builder()
                 .accessToken(result.getAccessToken())
                 .message("로그인되었습니다.")
@@ -328,11 +342,6 @@ public class AuthController {
                 .address(address)
                 .build();
 
-        userRepository.save(user);
-
-        String refreshToken = jwtTokenProvider.createRefreshToken(email);
-
-        user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
         SocialSignupResponseDTO.socialSignupResponse response = SocialSignupResponseDTO.socialSignupResponse.builder()
