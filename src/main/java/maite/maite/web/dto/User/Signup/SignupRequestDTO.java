@@ -1,11 +1,10 @@
 package maite.maite.web.dto.User.Signup;
 
 import lombok.*;
-import org.springframework.stereotype.Service;
 
 @Getter
+@Setter
 @Builder
-@Service
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignupRequestDTO {
@@ -14,4 +13,5 @@ public class SignupRequestDTO {
     private String name;
     private String phonenumber;
     private String address;
+    private String profileImageUrl;
 }

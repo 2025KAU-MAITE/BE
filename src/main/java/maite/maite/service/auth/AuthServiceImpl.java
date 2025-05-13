@@ -6,6 +6,7 @@ import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
 import maite.maite.repository.UserRepository;
 import maite.maite.security.JwtTokenProvider;
+import maite.maite.service.S3Service;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResult;
 import maite.maite.web.dto.User.Signup.SignupRequestDTO;
@@ -30,6 +31,10 @@ public class AuthServiceImpl implements AuthService{
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
 
+        String profileImageUrl = request.getProfileImageUrl();
+        if (profileImageUrl == null || profileImageUrl.trim().isEmpty()) {
+            profileImageUrl = "https://maite-s3.s3.ap-northeast-2.amazonaws.com/profile/980edf16-2ec6-4505-893f-5e8d40f9d960.png";
+        }
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -37,6 +42,7 @@ public class AuthServiceImpl implements AuthService{
                 .provider(LoginProvider.EMAIL)
                 .phonenumber(request.getPhonenumber())
                 .address(request.getAddress())
+                .profileImageUrl(profileImageUrl)
                 .build();
         userRepository.save(user);
         return user;
