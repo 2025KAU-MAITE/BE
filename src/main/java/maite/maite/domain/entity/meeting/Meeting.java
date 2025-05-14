@@ -34,7 +34,6 @@ public class Meeting {
     @Column(nullable = false)
     private LocalTime meetingTime;
 
-    @Column(nullable = false)
     private String address;
 
     // 녹음 파일 정보 (경로 등)
