@@ -51,6 +51,10 @@ coolsms:
     secret: ${coolsmsSecret}
   from:
     number: ${coolsmsNum}
+
+kakao:
+  admin-key: ${admin_key}
+
 # S3
 cloud:
   aws:
