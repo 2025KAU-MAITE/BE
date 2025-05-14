@@ -1,6 +1,7 @@
 package maite.maite.service.auth;
 
 import maite.maite.domain.entity.User;
+import maite.maite.web.dto.User.Login.GoogleLoginRequest;
 import maite.maite.web.dto.User.Login.LoginRequest;
 import maite.maite.web.dto.User.Login.LoginResult;
 import maite.maite.web.dto.User.Signup.SignupRequestDTO;
@@ -12,4 +13,5 @@ public interface AuthService {
     String reissueAccessToken(String refreshToken);
     void logout(User user);
     String findEmailByPhonenumber(String name, String phonenumber);
+    LoginResult googleLogin(GoogleLoginRequest googleLoginRequest);
 }
