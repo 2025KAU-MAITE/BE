@@ -1,5 +1,6 @@
 package maite.maite.service.pay;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class KakaoPayServiceImpl implements KakaoPayService {
 
     private final RestTemplate restTemplate;
     private final HttpSession session;
+    private final HttpServletRequest request;
 
     @Value("${kakao.admin-key}")
     private String adminKey;
@@ -53,10 +55,20 @@ public class KakaoPayServiceImpl implements KakaoPayService {
         body.add("quantity", "1");
         body.add("total_amount", "20000");
         body.add("tax_free_amount", "0");
+        // 현재 요청의 서버 이름에 따라 URL 결정
+        String serverName = request.getServerName();
+        String baseUrl;
+
+        if (serverName.equals("localhost")) {
+            baseUrl = "http://localhost:8080";
+        } else {
+            baseUrl = "http://3.39.205.32";
+        }
+
         // URL 파라미터로 주문 정보 전달
-        body.add("approval_url", "http://localhost:8080/kakao/success");
-        body.add("cancel_url", "http://localhost:8080/kakao/cancel");
-        body.add("fail_url", "http://localhost:8080/kakao/fail");
+        body.add("approval_url", baseUrl + "/kakao/success");
+        body.add("cancel_url", baseUrl + "/kakao/cancel");
+        body.add("fail_url", baseUrl + "/kakao/fail");
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<KakaoPayReadyResponse> response =
