@@ -14,12 +14,15 @@ import maite.maite.web.dto.chat.response.ChatRoomResponseDto;
 import maite.maite.web.dto.chat.response.MessageResponseDto;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +33,7 @@ public class ChatServiceImpl implements ChatService {
     private final UserRepository userRepository;
     private final ChatRoomUserRepository chatRoomUserRepository;
     private final MessageRepository messageRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final int MESSAGE_PAGE_SIZE = 30;
 
@@ -303,11 +307,14 @@ public class ChatServiceImpl implements ChatService {
                 .roomId(roomId)
                 .senderId(senderId)
                 .senderName(sender.getName())
-                .senderProfileImageUrl(sender.getProfileImageUrl()) //유저이미지 아직 설정 안됨
+                .senderProfileImageUrl(sender.getProfileImageUrl())
                 .content(message.getContent())
                 .imageUrl(null)
                 .sendAt(message.getSendAt())
-                .isRead(false)
+                .isRead(true)
+                .readCount(1)
+                .totalMemberCount(chatRoom.getChatRoomUsers().size())
+                .readByUsers(List.of()) // 새 메세지는 아직 읽지 않음
                 .build();
     }
 
@@ -352,7 +359,10 @@ public class ChatServiceImpl implements ChatService {
                 .content(null)
                 .imageUrl(message.getImageUrl())
                 .sendAt(message.getSendAt())
-                .isRead(false)
+                .isRead(true)
+                .readCount(1)
+                .totalMemberCount(chatRoom.getChatRoomUsers().size())
+                .readByUsers(List.of()) // 새 메세지는 아직 읽지 않음
                 .build();
     }
 
@@ -365,6 +375,7 @@ public class ChatServiceImpl implements ChatService {
 
         Pageable pageable = PageRequest.of(0, MESSAGE_PAGE_SIZE);
 
+        //메세지 조회
         List<Message> messages;
         if (lastMessageId != null) {
             messages = messageRepository.findByChatRoomIdAndIdLessThanOrderByIdDesc(roomId, lastMessageId, pageable);
@@ -372,18 +383,91 @@ public class ChatServiceImpl implements ChatService {
             messages = messageRepository.findByChatRoomIdOrderByIdDesc(roomId, pageable);
         }
 
+        // 현재 사용자의 읽음 상태 조회
+        ChatRoomUser currentUser = chatRoomUserRepository.findByChatRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방 사용자를 찾을 수 없습니다."));
+
+        // 채팅방의 모든 사용자와 읽음 상태 조회
+        List<ChatRoomUser> allUsers = chatRoomUserRepository.findAllByChatRoomId(roomId);
+
+        Map<Long,Long> userLastReadMap = new HashMap<>();
+        Map<Long,User> userMap = new HashMap<>();
+
+        for(ChatRoomUser chatRoomUser : allUsers) {
+            User user = chatRoomUser.getUser();
+            userLastReadMap.put(user.getId(), chatRoomUser.getLastReadMessageId() != null ? chatRoomUser.getLastReadMessageId() : 0L);
+            userMap.put(user.getId(), user);
+        }
+
         return messages.stream()
-                .map(message -> MessageResponseDto.builder()
-                        .id(message.getId())
-                        .roomId(roomId)
-                        .senderId(message.getSender().getId())
-                        .senderName(message.getSender().getName())
-                        .senderProfileImageUrl(message.getSender().getProfileImageUrl())
-                        .content(message.getContent())
-                        .imageUrl(message.getImageUrl())
-                        .sendAt(message.getSendAt())
-                        .isRead(false) // 읽음 상태 처리
-                        .build())
+                .map(message -> {
+                    boolean isRead = message.getSender().getId().equals(userId) ||
+                            (currentUser.getLastReadMessageId() != null && message.getId() <= currentUser.getLastReadMessageId());
+
+                    List<MessageResponseDto.ReadByUserInfo> readByUsers = userLastReadMap.entrySet()
+                            .stream()
+                            .filter(entry -> {
+                                Long userIdKey = entry.getKey();
+                                Long lastReadId = entry.getValue();
+
+                                return !userIdKey.equals(message.getSender().getId()) &&
+                                        lastReadId >= message.getId();
+                            })
+                            .map(entry -> {
+                                User user = userMap.get(entry.getKey());
+                                return MessageResponseDto.ReadByUserInfo.builder()
+                                        .userId(user.getId())
+                                        .name(user.getName())
+                                        .profileImageUrl(user.getProfileImageUrl())
+                                        .build();
+                            })
+                            .collect(Collectors.toList());
+
+
+                        int readCount = 1 + readByUsers.size();
+
+                        return MessageResponseDto.builder()
+                                .id(message.getId())
+                                .roomId(roomId)
+                                .senderId(message.getSender().getId())
+                                .senderName(message.getSender().getName())
+                                .senderProfileImageUrl(message.getSender().getProfileImageUrl())
+                                .content(message.getContent())
+                                .imageUrl(message.getImageUrl())
+                                .sendAt(message.getSendAt())
+                                .isRead(isRead)
+                                .readCount(readCount)
+                                .totalMemberCount(allUsers.size())
+                                .readByUsers(readByUsers)
+                                .build();
+                })
                 .collect(Collectors.toList());
+    }
+
+    // 메시지 읽음 처리
+    public void markMessageAsRead(Long roomId, Long userId, Long messageId){
+        ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다."));
+
+        if(chatRoomUser.getLastReadMessageId() != null && chatRoomUser.getLastReadMessageId() >= messageId) {
+            return;
+        }
+
+        // 마지막 읽은 메세지 ID 업데이트
+        chatRoomUser.setLastReadMessageId(messageId);
+        chatRoomUserRepository.save(chatRoomUser);
+
+        User user = chatRoomUser.getUser();
+        Map<String, Object> readReceiptUpdate = new HashMap<>();
+        readReceiptUpdate.put("messageId", messageId);
+        readReceiptUpdate.put("userId", user.getId());
+        readReceiptUpdate.put("userInfo", Map.of(
+                "userId", user.getId(),
+                "name", user.getName(),
+                "profileImageUrl", user.getProfileImageUrl()
+        ));
+
+        //채팅방의 다른 사용자들에게 읽음 상태 변경 알림
+        messagingTemplate.convertAndSend("/topic/chat/" + roomId + "/read-receipts", readReceiptUpdate);
     }
 }

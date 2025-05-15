@@ -21,4 +21,11 @@ public interface ChatService {
     //메세지 관련
     MessageResponseDto sendTextMessage(Long roomId, Long userId, String content);
     MessageResponseDto sendImageMessage(Long roomId, Long userId, String imageUrl);
+
+    //메세지 읽음 처리
+    void markMessageAsRead(Long roomId, Long userId, Long messageId);
+
+    //안읽은 메시지 수 조회
+    //int getUnreadMessageCount(Long roomId, Long userId);
+
 }
