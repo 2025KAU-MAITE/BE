@@ -14,7 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/timetables/{timetableId}")
+@RequestMapping("/api/timetables/myTimetableId")
 @RequiredArgsConstructor
 @Tag(name = "event", description = "일정 관련 API")
 public class EventController {
@@ -24,19 +24,18 @@ public class EventController {
     // 시간표 별 일정 조회 API
     @Operation(summary = "시간표 별 일정 조회 API")
     @GetMapping("/events")
-    public ApiResponse<List<EventResponseDto>> getEventsByTimetable(
-            @PathVariable Long timetableId,
+    public ApiResponse<List<EventResponseDto>> getMyEvents(
+            //@PathVariable Long timetableId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
         Long userId = userDetails.getUser().getId();
-        return ApiResponse.onSuccess(eventService.getEventsByTimetable(timetableId, userId));
+        return ApiResponse.onSuccess(eventService.getMyEvents(userId));
     }
 
     // 일정 조회 API
-    @Operation(summary = "일정 조회 API")
+    @Operation(summary = "각각의 일정 조회 API")
     @GetMapping("/event/{eventId}")
     public ApiResponse<EventResponseDto> getEvent(
-            @PathVariable Long timetableId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
@@ -48,19 +47,18 @@ public class EventController {
     @Operation(summary = "일정 생성 API")
     @PostMapping("/event")
     public ApiResponse<EventResponseDto> createEvent(
-            @PathVariable Long timetableId,
+            //@PathVariable Long timetableId,
             @RequestBody EventRequestDto request,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
         Long userId = userDetails.getUser().getId();
-        return ApiResponse.onSuccess(eventService.createEvent(timetableId, request,userId));
+        return ApiResponse.onSuccess(eventService.createEvent(request,userId));
     }
 
     //일정 수정 API
     @Operation(summary = "일정 수정 API")
     @PatchMapping("/event/{eventId}")
     public ApiResponse<EventResponseDto> updateEvent(
-            @PathVariable Long timetableId,
             @PathVariable Long eventId,
             @RequestBody EventRequestDto request,
             @AuthenticationPrincipal CustomerUserDetails userDetails
@@ -73,7 +71,6 @@ public class EventController {
     @Operation(summary = "일정 삭제 API")
     @DeleteMapping("/event/{eventId}")
     public ApiResponse<Void> deleteEvent(
-            @PathVariable Long timetableId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){

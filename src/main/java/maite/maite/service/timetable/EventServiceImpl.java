@@ -1,6 +1,7 @@
 package maite.maite.service.timetable;
 
 import lombok.RequiredArgsConstructor;
+import maite.maite.domain.entity.User;
 import maite.maite.domain.entity.timetable.Event;
 import maite.maite.domain.entity.timetable.Timetable;
 import maite.maite.repository.UserRepository;
@@ -23,6 +24,7 @@ public class EventServiceImpl implements EventService {
     private final TimetableRepository timetableRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public EventResponseDto getEvent(Long eventId, Long userId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
@@ -35,15 +37,13 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventResponseDto> getEventsByTimetable(Long timetableId, Long userId) {
-        Timetable timetable = timetableRepository.findById(timetableId)
-                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
+    @Transactional(readOnly = true)
+    public List<EventResponseDto> getMyEvents(Long userId) {
+        // 사용자의 시간표 조회
+        Timetable timetable = timetableRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("시간표가 존재하지 않습니다."));
 
-        if (!timetable.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("접근 권한이 없습니다.");
-        }
-
-        List<Event> events = eventRepository.findByTimetableId(timetableId);
+        List<Event> events = eventRepository.findByTimetableId(timetable.getId());
 
         return events.stream()
                 .map(this::convertToEventResponseDto)
@@ -52,16 +52,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventResponseDto createEvent(Long timetableId, EventRequestDto request, Long userId) {
-        Timetable timetable = timetableRepository.findById(timetableId)
-                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
-
-        if (!timetable.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("접근 권한이 없습니다.");
-        }
+    public EventResponseDto createEvent(EventRequestDto request, Long userId) {
+        // 사용자의 시간표 조회
+        Timetable timetable = timetableRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("시간표가 존재하지 않습니다."));
 
         // 시간 충돌 검사
-        checkTimeConflict(timetableId, request.getDay(), request.getStartTime(), request.getEndTime(), null);
+        checkTimeConflict(timetable.getId(), request.getDay(), request.getStartTime(), request.getEndTime(), null);
 
         Event event = Event.builder()
                 .title(request.getTitle())
