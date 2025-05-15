@@ -1,5 +1,7 @@
 package maite.maite.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import maite.maite.apiPayload.ApiResponse;
 import maite.maite.aws.S3.AmazonS3Manager;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/profile")
+@Tag(name = "ProfileImage", description = "프로필이미지 변경 관련 API")
 @RequiredArgsConstructor
 public class ProfileController {
 
@@ -27,6 +30,7 @@ public class ProfileController {
     private final UserRepository userRepository;
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "프로필 이미지 변경 API", description = "프로필이미지 변경")
     public ApiResponse<String> updateProfileImage(
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal CustomerUserDetails userDetails
@@ -41,6 +45,7 @@ public class ProfileController {
     }
 
     @PostMapping("/image-to-basic")
+    @Operation(summary = "기본 이미지 변경 API", description = "프로필이미지 변경(기본이미지) 요청")
     public ApiResponse<String> updateProfileImageToBasic(
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {

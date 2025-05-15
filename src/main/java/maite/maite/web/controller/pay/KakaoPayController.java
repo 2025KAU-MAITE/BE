@@ -1,5 +1,7 @@
 package maite.maite.web.controller.pay;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import maite.maite.domain.entity.User;
@@ -15,12 +17,14 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "KakaoPay", description = "카카오페이 결제 관련 API")
 @RequestMapping("/kakao")
 public class KakaoPayController {
 
     private final KakaoPayServiceImpl kakaoPayService;
 
     @PostMapping("/ready")
+    @Operation(summary = "결제 요청 API", description = "결제 요청")
     public ResponseEntity<KakaoPayReadyResponse> readyToPay(
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
@@ -30,6 +34,7 @@ public class KakaoPayController {
     }
 
     @GetMapping("/success")
+    @Operation(summary = "결제 성공 API", description = "결제 성공")
     public ResponseEntity<KakaoPayApproveResponse> approvePayment(
             @RequestParam("pg_token") String pgToken,
             @RequestParam(required = false) String orderId,
