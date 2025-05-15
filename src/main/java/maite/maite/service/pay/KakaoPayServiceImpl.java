@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter;
 public class KakaoPayServiceImpl implements KakaoPayService {
 
     private final RestTemplate restTemplate;
-    private final HttpSession session;
     private final HttpServletRequest request;
 
     @Value("${kakao.admin-key}")
@@ -40,7 +39,7 @@ public class KakaoPayServiceImpl implements KakaoPayService {
     @Override
     public KakaoPayReadyResponse readyToPay(User user) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "KakaoAK " + adminKey); // ✅ 여기서 prefix 붙여줌
+        headers.set("Authorization", "KakaoAK " + adminKey);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         // 고정된 값으로 주문 ID 생성
@@ -55,17 +54,16 @@ public class KakaoPayServiceImpl implements KakaoPayService {
         body.add("quantity", "1");
         body.add("total_amount", "20000");
         body.add("tax_free_amount", "0");
-        // 현재 요청의 서버 이름에 따라 URL 결정
+
         String serverName = request.getServerName();
         String baseUrl;
 
         if (serverName.equals("localhost")) {
             baseUrl = "http://localhost:8080";
         } else {
-            baseUrl = "http://3.39.205.32";
+            baseUrl = "http://3.39.205.32"; // 또는 DNS 도메인으로 대체
         }
 
-        // URL 파라미터로 주문 정보 전달
         body.add("approval_url", baseUrl + "/kakao/success");
         body.add("cancel_url", baseUrl + "/kakao/cancel");
         body.add("fail_url", baseUrl + "/kakao/fail");
@@ -77,43 +75,27 @@ public class KakaoPayServiceImpl implements KakaoPayService {
         KakaoPayReadyResponse readyResponse = response.getBody();
 
         if (readyResponse != null) {
-            // 결제 정보를 세션에 저장
-            session.setAttribute("kakaoPayTid", readyResponse.getTid());
-            session.setAttribute("kakaoPayOrderId", orderId);
-            session.setAttribute("kakaoPayUserId", userId);
+            readyResponse.setPartnerOrderId(orderId);
+            readyResponse.setPartnerUserId(userId);
         }
-
         return readyResponse;
     }
 
     @Override
     public KakaoPayApproveResponse approvePay(KakaoPayApproveRequest requestDto) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "KakaoAK " + adminKey);
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
         String tid = requestDto.getTid();
         String pgToken = requestDto.getPgToken();
         String orderId = requestDto.getPartnerOrderId();
         String userId = requestDto.getPartnerUserId();
 
-        // URL 파라미터에서 값이 제공되지 않으면 세션에서 가져오기
-        if (tid == null || tid.isEmpty()) {
-            tid = (String) session.getAttribute("kakaoPayTid");
-        }
-
-        if (orderId == null || orderId.isEmpty()) {
-            orderId = (String) session.getAttribute("kakaoPayOrderId");
-        }
-
-        if (userId == null || userId.isEmpty()) {
-            userId = (String) session.getAttribute("kakaoPayUserId");
-        }
-
-        // 안전장치 - 모든 필수값 확보 확인
+        // 🔐 필수값 검증
         if (tid == null || pgToken == null || orderId == null || userId == null) {
-            throw new IllegalArgumentException("Missing required payment parameters");
+            throw new IllegalArgumentException("결제 승인에 필요한 파라미터가 누락되었습니다.");
         }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "KakaoAK " + adminKey);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("cid", CID);
@@ -128,14 +110,10 @@ public class KakaoPayServiceImpl implements KakaoPayService {
             ResponseEntity<KakaoPayApproveResponse> response =
                     restTemplate.postForEntity(APPROVE_URL, request, KakaoPayApproveResponse.class);
 
-            // 결제 완료 후 세션 정리
-            session.removeAttribute("kakaoPayTid");
-            session.removeAttribute("kakaoPayOrderId");
-            session.removeAttribute("kakaoPayUserId");
-
             return response.getBody();
         } catch (Exception e) {
-            throw e;
+            log.error("카카오페이 승인 요청 실패 - {}", e.getMessage(), e);
+            throw new RuntimeException("카카오페이 결제 승인 중 오류가 발생했습니다.", e);
         }
     }
 }
