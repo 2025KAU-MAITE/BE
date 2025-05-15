@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -21,4 +22,18 @@ public class MessageResponseDto {
     private String imageUrl;       // 이미지 URL (텍스트만 있는 경우 null)
     private LocalDateTime sendAt;  // 전송 시간
     private boolean isRead;        // 읽음 여부
+    private int readCount;        // 내 메시지 여부
+    private int totalMemberCount;
+
+    private List<ReadByUserInfo> readByUsers;
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReadByUserInfo {
+        private Long userId;            // 사용자 ID
+        private String name;            // 사용자 이름
+        private String profileImageUrl; // 프로필 이미지 URL
+    }
 }

@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -88,5 +89,17 @@ public class ChatController {
         Long userId = userDetails.getUser().getId();
         List<MessageResponseDto> messages = chatService.getChatMessages(roomId, userId, lastMessageId);
         return ApiResponse.onSuccess(messages);
+    }
+
+    //websocket을 통한 읽음 상태 업데이트
+    @MessageMapping("/chat.markAsRead/{roomId}")
+    public void markAsReadWebSocket(
+            @DestinationVariable Long roomId,
+            @Payload Map<String, Object> payload
+            ){
+        Long UserId = Long.valueOf(payload.get("userId").toString());
+        Long messageId = Long.valueOf(payload.get("messageId").toString());
+
+        chatService.markMessageAsRead(roomId, UserId, messageId);
     }
 }

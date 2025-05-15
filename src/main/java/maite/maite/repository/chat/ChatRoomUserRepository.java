@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -19,7 +20,8 @@ public interface ChatRoomUserRepository extends JpaRepository<ChatRoomUser, Long
     Optional<ChatRoomUser> findFirstByChatRoomIdAndUserIdNot(@Param("roomId") Long roomId, @Param("userId") Long userId);
 
     void deleteAllByChatRoomId(Long roomId);
-    boolean existsByChatRoomIdAndUserId(@Param("roomId") Long roomId, @Param("userId") Long nuwUserId);
+    boolean existsByChatRoomIdAndUserId(@Param("roomId") Long roomId, @Param("userId") Long newUserId);
 
+    List<ChatRoomUser> findAllByChatRoomId(Long roomId);
 }
 
