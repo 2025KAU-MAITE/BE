@@ -88,6 +88,44 @@ public class S3Service {
     }
 
     /**
+     * 프로필 이미지를 변경
+     *
+     * @param file 새로 업로드할 프로필 이미지
+     * @param currentImageUrl 기존에 사용 중인 프로필 이미지의 URL
+     * @return 새로 업로드된 이미지의 URL
+     */
+
+    public String updateProfileImage(MultipartFile file, String currentImageUrl) {
+        try {
+            // 1. 기존 이미지 삭제
+            if (currentImageUrl != null && !currentImageUrl.isEmpty() && !currentImageUrl.equals("https://maite-s3.s3.ap-northeast-2.amazonaws.com/profile/980edf16-2ec6-4505-893f-5e8d40f9d960.png")) {
+                String oldKeyName = extractKeyFromUrl(currentImageUrl);
+                amazonS3Manager.deleteFile(oldKeyName);
+            }
+
+            // 고유한 파일명 생성
+            String uuid = generateUniqueUuid();
+
+            // 파일 확장자 추출
+            String extension = getFileExtension(file.getOriginalFilename());
+
+            // S3 경로 구성: 프로필 경로/사용자ID/UUID.확장자
+            String keyName = String.format("%s/%s%s",
+                    amazonConfig.getProfilePath(),
+                    uuid,
+                    extension);
+
+            // S3에 업로드
+            String imageUrl = amazonS3Manager.uploadFile(keyName, file);
+
+            return imageUrl;
+        } catch (Exception e) {
+            //log.error("Failed to upload profile image to S3: {}", e.getMessage());
+            throw new RuntimeException("프로필 이미지 업로드에 실패했습니다.", e);
+        }
+    }
+
+    /**
      * 고유한 UUID 생성 및 저장
      *
      * @return 생성된 UUID 문자열
@@ -116,5 +154,18 @@ public class S3Service {
             return ".jpg"; // 기본 확장자
         }
         return filename.substring(filename.lastIndexOf("."));
+    }
+
+    /**
+     * S3 URL에서 Object Key 추출
+     *
+     * @param url S3 URL
+     * @return Object Key
+     */
+    private String extractKeyFromUrl(String url) {
+        String bucketUrl = String.format("https://%s.s3.%s.amazonaws.com/",
+                amazonConfig.getBucket(),
+                amazonConfig.getRegion());
+        return url.replace(bucketUrl, "");
     }
 }
