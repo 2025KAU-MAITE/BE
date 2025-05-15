@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import maite.maite.apiPayload.ApiResponse;
 import maite.maite.domain.entity.User;
 import maite.maite.security.CustomerUserDetails;
 import maite.maite.service.pay.KakaoPayServiceImpl;
@@ -25,32 +26,21 @@ public class KakaoPayController {
 
     @PostMapping("/ready")
     @Operation(summary = "결제 요청 API", description = "결제 요청")
-    public ResponseEntity<KakaoPayReadyResponse> readyToPay(
+    public ApiResponse<KakaoPayReadyResponse> readyToPay(
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
         User user = userDetails.getUser();
         KakaoPayReadyResponse response = kakaoPayService.readyToPay(user);
-        return ResponseEntity.ok(response);
+        return ApiResponse.onSuccess(response);
     }
 
-    @GetMapping("/success")
+    @PostMapping("/success")
     @Operation(summary = "결제 성공 API", description = "결제 성공")
-    public ResponseEntity<KakaoPayApproveResponse> approvePayment(
-            @RequestParam("pg_token") String pgToken,
-            @RequestParam(required = false) String orderId,
-            @RequestParam(required = false) String userId) {
-
-        log.info("Payment approval request received: pgToken={}, orderId={}, userId={}",
-                pgToken, orderId, userId);
-
-        KakaoPayApproveRequest request = KakaoPayApproveRequest.builder()
-                .pgToken(pgToken)
-                .partnerOrderId(orderId)
-                .partnerUserId(userId)
-                .build();
-
+    public ApiResponse<KakaoPayApproveResponse> approvePayment(
+            @RequestBody KakaoPayApproveRequest request
+    ) {
         KakaoPayApproveResponse response = kakaoPayService.approvePay(request);
-        return ResponseEntity.ok(response);
+        return ApiResponse.onSuccess(response);
     }
 
     @GetMapping("/cancel")

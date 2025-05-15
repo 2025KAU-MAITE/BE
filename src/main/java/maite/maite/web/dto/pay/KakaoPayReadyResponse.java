@@ -11,4 +11,6 @@ public class KakaoPayReadyResponse {
     @JsonProperty("next_redirect_mobile_url")
     private String nextRedirectMobileUrl;    // 사용자 결제 페이지 URL
     private String created_at;
+    private String partnerOrderId;
+    private String partnerUserId;
 }
