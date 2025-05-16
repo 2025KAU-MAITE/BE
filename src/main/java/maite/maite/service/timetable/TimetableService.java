@@ -7,10 +7,8 @@ import maite.maite.web.dto.timetable.response.UserTimetableResponseDto;
 import java.util.List;
 
 public interface TimetableService{
-    TimetableResponseDto getTimetable(Long timetableId, Long userId);
+    TimetableResponseDto getMyTimetable(Long userId);
     UserTimetableResponseDto getTimetableByEmail(String userEmail);
     TimetableResponseDto createTimetable(TimetableRequestDto request, Long userId);
-    void deleteTimetable(Long timetableId, Long userId);
-
-    List<TimetableResponseDto> getTimetablesByUserId(Long userId);
+    void deleteTimetable(Long userId);
 }

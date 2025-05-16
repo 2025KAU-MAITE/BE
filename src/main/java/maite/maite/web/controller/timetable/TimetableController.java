@@ -26,11 +26,11 @@ public class TimetableController {
     // 자기 시간표 조회 API
     @Operation(summary = "자기 시간표 조회 API")
     @GetMapping("/my")
-    public ApiResponse<List<TimetableResponseDto>> getMyTimetables(
+    public ApiResponse<TimetableResponseDto> getMyTimetables(
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
         Long userId = userDetails.getUser().getId();
-        return ApiResponse.onSuccess(timetableService.getTimetablesByUserId(userId));
+        return ApiResponse.onSuccess(timetableService.getMyTimetable(userId));
     }
 
     // 시간표 조회 API
@@ -57,13 +57,12 @@ public class TimetableController {
 
     //시간표 삭제 API
     @Operation(summary = "시간표 삭제 API")
-    @DeleteMapping("/{timetableId}")
+    @DeleteMapping
     public ApiResponse<Void> deleteTimetable(
-            @PathVariable Long timetableId,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ){
         Long userId = userDetails.getUser().getId();
-        timetableService.deleteTimetable(timetableId, userId);
+        timetableService.deleteTimetable(userId);
         return ApiResponse.onSuccess(null);
     }
 
