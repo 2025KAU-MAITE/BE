@@ -2,7 +2,6 @@ package maite.maite.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import maite.maite.domain.Enum.Gender;
 import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.mapping.ChatRoomUser;
 
@@ -42,6 +41,9 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Subscription> subscriptions = new ArrayList<>();
 
     @Column(nullable = false)
     private String address;

@@ -8,9 +8,9 @@ import maite.maite.apiPayload.ApiResponse;
 import maite.maite.apiPayload.exception.handler.CommonExceptionHandler;
 import maite.maite.domain.Enum.LoginProvider;
 import maite.maite.domain.entity.User;
+import maite.maite.repository.SubscriptionRepository;
 import maite.maite.repository.UserRepository;
 import maite.maite.security.CustomerUserDetails;
-import maite.maite.security.JwtTokenProvider;
 import maite.maite.service.S3Service;
 import maite.maite.service.auth.AuthService;
 import maite.maite.service.auth.SmsService;
@@ -46,7 +46,7 @@ import static maite.maite.apiPayload.code.status.ErrorStatus.*;
 public class AuthController {
     private final AuthService authService;
     private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final SubscriptionRepository subscriptionRepository;
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
     private final VerificationService verificationService;
@@ -315,6 +315,8 @@ public class AuthController {
                 .name(user.getName())
                 .email(user.getEmail())
                 .phonenumber(user.getPhonenumber())
+                .profileImageUrl(user.getProfileImageUrl())
+                .isSubscribed(subscriptionRepository.existsByUserId(user.getId()))
                 .build();
         return ApiResponse.onSuccess(response);
     }
