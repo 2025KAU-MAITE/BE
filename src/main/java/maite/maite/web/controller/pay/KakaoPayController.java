@@ -7,11 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import maite.maite.apiPayload.ApiResponse;
 import maite.maite.domain.entity.User;
 import maite.maite.security.CustomerUserDetails;
-import maite.maite.service.pay.KakaoPayServiceImpl;
+import maite.maite.service.pay.KakaoPayService;
+import maite.maite.service.pay.SubscriptionService;
 import maite.maite.web.dto.pay.KakaoPayApproveRequest;
 import maite.maite.web.dto.pay.KakaoPayApproveResponse;
 import maite.maite.web.dto.pay.KakaoPayReadyResponse;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/kakao")
 public class KakaoPayController {
 
-    private final KakaoPayServiceImpl kakaoPayService;
+    private final KakaoPayService kakaoPayService;
+    private final SubscriptionService subscriptionService;
 
     @PostMapping("/ready")
     @Operation(summary = "결제 요청 API", description = "결제 요청")
@@ -37,9 +38,13 @@ public class KakaoPayController {
     @PostMapping("/success")
     @Operation(summary = "결제 성공 API", description = "결제 성공")
     public ApiResponse<KakaoPayApproveResponse> approvePayment(
-            @RequestBody KakaoPayApproveRequest request
+            @RequestBody KakaoPayApproveRequest request,
+            @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
+        User user = userDetails.getUser();
         KakaoPayApproveResponse response = kakaoPayService.approvePay(request);
+        subscriptionService.addSubscription(user);
+
         return ApiResponse.onSuccess(response);
     }
 
