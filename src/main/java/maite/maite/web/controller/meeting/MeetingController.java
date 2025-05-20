@@ -36,8 +36,9 @@ public class MeetingController {
 
     @Operation(summary = "회의방 기준 회의 목록 조회")
     @GetMapping("/rooms/{roomId}")
-    public ResponseEntity<List<MeetingSummaryResponse>> getMeetingsByRoom(@PathVariable Long roomId) {
-        return ResponseEntity.ok(meetingService.getMeetingsByRoom(roomId));
+    public ResponseEntity<List<MeetingSummaryResponse>> getMeetingsByRoom(@PathVariable Long roomId,
+                                                                          @AuthenticationPrincipal CustomerUserDetails userDetails) {
+        return ResponseEntity.ok(meetingService.getMeetingsByRoom(roomId, userDetails.getUser()));
     }
 
     @Operation(summary = "회의 상세 조회")

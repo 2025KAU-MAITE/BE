@@ -28,6 +28,7 @@ import java.time.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,17 +66,28 @@ public class MeetingServiceImpl implements MeetingService {
     // ✅ 2. 방 기준 회의 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public List<MeetingSummaryResponse> getMeetingsByRoom(Long roomId) {
-        return meetingRepository.findAllByRoom_Id(roomId)
-                .stream()
-                .map(meeting -> MeetingSummaryResponse.builder()
-                        .meetingId(meeting.getId())
-                        .title(meeting.getTitle())
-                        .proposerName(meeting.getProposer().getName())
-                        .meetingDate(meeting.getMeetingDate().toString())
-                        .meetingTime(meeting.getMeetingTime().toString())
-                        .address(meeting.getAddress())
-                        .build()) // 필요한 필드만
+    public List<MeetingSummaryResponse> getMeetingsByRoom(Long roomId, User user) {
+        List<Meeting> meetings = meetingRepository.findAllByRoom_Id(roomId);
+
+        return meetings.stream()
+                .map(meeting -> {
+                    // 회의와 유저로부터 UserMeeting 정보를 조회
+                    Optional<UserMeeting> userMeeting = userMeetingRepository.findByMeetingAndUser(meeting, user);
+
+                    String acceptance = userMeeting
+                            .map(um -> um.getStatus().name())
+                            .orElse("NOT_INVITED");
+
+                    return MeetingSummaryResponse.builder()
+                            .meetingId(meeting.getId())
+                            .title(meeting.getTitle())
+                            .proposerName(meeting.getProposer().getName())
+                            .meetingDate(meeting.getMeetingDate().toString())
+                            .meetingTime(meeting.getMeetingTime().toString())
+                            .address(meeting.getAddress())
+                            .acceptance(acceptance)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 

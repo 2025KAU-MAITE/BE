@@ -15,7 +15,7 @@ import java.util.List;
 public interface MeetingService {
     MeetingResponse getMeetingDetail(Long meetingId);
     List<MeetingSummaryResponse> getMeetingsOfUser(User user);
-    List<MeetingSummaryResponse> getMeetingsByRoom(Long roomId);
+    List<MeetingSummaryResponse> getMeetingsByRoom(Long roomId, User user);
     void createMeeting(Long roomId, User proposer, MeetingCreateRequest request);
     void updateMeeting(Long meetingId, User user, MeetingUpdateRequest request);
     void deleteMeeting(Long meetingId, User user);

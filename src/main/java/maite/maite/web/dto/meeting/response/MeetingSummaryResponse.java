@@ -17,4 +17,5 @@ public class MeetingSummaryResponse {
     private String meetingDate;
     private String meetingTime;
     private String address;
+    private String acceptance;
 }
