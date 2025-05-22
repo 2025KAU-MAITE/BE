@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔥 실제 토스페이먼츠 테스트</title>
+    <meta charset="UTF-8">
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .container { border: 2px solid #0064FF; padding: 20px; border-radius: 10px; }
+        button { padding: 15px 30px; background: #0064FF; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .info { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .step { margin: 10px 0; padding: 10px; background: #e8f4fd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔥 실제 토스페이먼츠 연동 테스트</h1>
+
+    <div class="info">
+        <h3>📋 상품 정보</h3>
+        <p><strong>상품명:</strong> MAITE 프리미엄 구독</p>
+        <p><strong>금액:</strong> 20,000원</p>
+        <p><strong>설명:</strong> 실제 토스앱으로 결제 (테스트 모드 - 돈 안빠짐)</p>
+    </div>
+
+    <div class="step">
+        <h4>1단계: JWT 토큰 입력</h4>
+        <input type="text" id="jwtToken" placeholder="Bearer 토큰을 입력하세요" style="width: 100%; padding: 10px;">
+        <small>Swagger에서 /auth/login으로 토큰을 먼저 발급받으세요</small>
+    </div>
+
+    <div class="step">
+        <h4>2단계: 결제 준비</h4>
+        <button onclick="preparePayment()">결제 정보 준비하기</button>
+        <div id="prepareResult"></div>
+    </div>
+
+    <div class="step">
+        <h4>3단계: 실제 토스앱 결제</h4>
+        <button id="paymentButton" onclick="requestTossPayment()" disabled>🚀 실제 토스앱으로 결제하기</button>
+    </div>
+</div>
+
+<script>
+    const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq'; // 토스 공식 테스트 키
+    const tossPayments = TossPayments(clientKey);
+    let paymentData = null;
+
+    // 1단계: 결제 준비
+    async function preparePayment() {
+        const token = document.getElementById('jwtToken').value;
+        if (!token) {
+            alert('JWT 토큰을 입력하세요!');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8080/toss/ready', {
+                method: 'POST',
+                headers: {
+                    'Authorization': token.startsWith('Bearer ') ? token : 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.isSuccess) {
+                paymentData = result.result;
+                document.getElementById('prepareResult').innerHTML = `
+                        <div style="color: green; margin-top: 10px;">
+                            ✅ 결제 준비 완료!<br>
+                            📋 주문ID: ${paymentData.orderId}<br>
+                            💰 금액: ${paymentData.amount.toLocaleString()}원<br>
+                            👤 고객명: ${paymentData.customerName}<br>
+                            🌐 성공URL: ${paymentData.successUrl}
+                        </div>
+                    `;
+                document.getElementById('paymentButton').disabled = false;
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            document.getElementById('prepareResult').innerHTML = `
+                    <div style="color: red; margin-top: 10px;">
+                        ❌ 준비 실패: ${error.message}
+                    </div>
+                `;
+        }
+    }
+
+    // 2단계: 실제 토스 결제창 오픈
+    async function requestTossPayment() {
+        if (!paymentData) {
+            alert('먼저 결제 준비를 해주세요!');
+            return;
+        }
+
+        try {
+            console.log('🚀 실제 토스 결제창 오픈!', paymentData);
+
+            // 🔥 실제 토스앱 결제창 오픈 (여기서 진짜 토스앱으로 넘어감!)
+            await tossPayments.requestPayment('카드', {
+                amount: paymentData.amount,
+                orderId: paymentData.orderId,
+                orderName: paymentData.orderName,
+                customerName: paymentData.customerName,
+                successUrl: paymentData.successUrl,
+                failUrl: paymentData.failUrl,
+            });
+
+        } catch (error) {
+            console.error('결제 실패:', error);
+            alert('결제 중 오류가 발생했습니다: ' + error.message);
+        }
+    }
+</script>
+</body>
+</html>

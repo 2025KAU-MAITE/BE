@@ -29,7 +29,9 @@ public class SecurityConfig {
                                 "/api/**",
                                 "/rooms/**",
                                 "/swagger-ui/**",
-                                //"/Chat.html",
+                                //"/Chat.html",         // 채팅 테스트용 html
+                                //"test-toss.html",     // 토스 결제 테스트용 html
+                                //"/toss/**",           // 토스 결제 테스트 관련 API
                                 "/ws-chat/**",
                                 "/kakao/**",
                                 "/v3/api-docs/**").permitAll()
