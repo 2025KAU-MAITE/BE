@@ -62,6 +62,10 @@ coolsms:
 kakao:
   admin-key: ${admin_key}
 
+toss:
+  client-key: ${toss_client_key}
+  secret-key: ${toss_secret_key}
+
 # S3
 cloud:
   aws:
