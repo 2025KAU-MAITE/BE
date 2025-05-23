@@ -144,6 +144,7 @@ public class AuthController {
         LoginResult result = authService.login(request);
         LoginResponse response = LoginResponse.builder()
                 .accessToken(result.getAccessToken())
+                .userId(result.getUser().getId())
                 .message("로그인되었습니다.")
                 .build();
         return ApiResponse.onSuccess(response);
@@ -157,6 +158,7 @@ public class AuthController {
         LoginResult result = authService.googleLogin(googleLoginRequest);
         LoginResponse response = LoginResponse.builder()
                 .accessToken(result.getAccessToken())
+                .userId(result.getUser().getId())
                 .message("로그인되었습니다.")
                 .build();
         return ApiResponse.onSuccess(response);

@@ -66,6 +66,16 @@ toss:
   client-key: ${toss_client_key}
   secret-key: ${toss_secret_key}
 
+clova:
+  speech:
+    secret-key: ${clova_secret_key}
+    invoke-url: ${clova_invoke_url}
+object-storage:
+  bucket: maite
+  region: kr-standard
+  access-key: ${naver_storage_access_key}
+  secret-key: ${naver_storage_secret_key}
+
 # S3
 cloud:
   aws:
