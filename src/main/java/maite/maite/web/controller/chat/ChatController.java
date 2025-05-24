@@ -38,13 +38,13 @@ public class ChatController {
     @MessageMapping("/chat.sendMessage/{roomId}")
     public void sendMessage(
             @DestinationVariable Long roomId,
-            @Payload MessageRequestDto messageRequest,
-            @AuthenticationPrincipal CustomerUserDetails userDetails
+            @Payload MessageRequestDto messageRequest
+            //@AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
-        Long userId = userDetails.getUser().getId();
+        //Long userId = userDetails.getUser().getId();
         MessageResponseDto message = chatService.sendTextMessage(
                 roomId,
-                userId,
+                messageRequest.getSenderId(),
                 messageRequest.getContent()
         );
 
@@ -97,12 +97,13 @@ public class ChatController {
     @MessageMapping("/chat.markAsRead/{roomId}")
     public void markAsReadWebSocket(
             @DestinationVariable Long roomId,
-            @Payload Map<String, Object> payload,
-            @AuthenticationPrincipal CustomerUserDetails userDetails
+            @Payload Map<String, Object> payload
+            //@AuthenticationPrincipal CustomerUserDetails userDetails
             ){
-        Long userId = userDetails.getUser().getId();
+        //Long userId = userDetails.getUser().getId();
+        Long userId = Long.valueOf(payload.get("userId").toString());
         Long messageId = Long.valueOf(payload.get("messageId").toString());
 
-        chatService.markMessageAsRead(roomId, userId, messageId);
+        chatService.markMessageAsRead(roomId, userId , messageId);
     }
 }
