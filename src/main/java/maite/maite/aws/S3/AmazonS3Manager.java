@@ -1,47 +1,77 @@
 package maite.maite.aws.S3;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import maite.maite.config.AmazonConfig;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AmazonS3Manager{
 
     private final AmazonS3 amazonS3;
-
     private final AmazonConfig amazonConfig;
-
     private final UuidRepository uuidRepository;
 
     public String uploadFile(String keyName, MultipartFile file){
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentType(file.getContentType());
+
+        // 확장자 기반으로 Content-Type 설정 (문제 해결!)
+        String contentType = determineContentType(file);
+        metadata.setContentType(contentType);
         metadata.setContentLength(file.getSize());
+
+        // 브라우저에서 바로 보기 설정
+        if (contentType.startsWith("image/")) {
+            metadata.setContentDisposition("inline");
+        }
+
         try {
-            amazonS3.putObject(new PutObjectRequest(amazonConfig.getBucket(), keyName, file.getInputStream(), metadata));
-        }catch (IOException e){
-            log.error("error at AmazonS3Manager uploadFile : {}", (Object) e.getStackTrace());
+            PutObjectRequest putRequest = new PutObjectRequest(
+                    amazonConfig.getBucket(),
+                    keyName,
+                    file.getInputStream(),
+                    metadata
+            );
+
+            //putRequest.setCannedAcl(CannedAccessControlList.PublicRead);
+            amazonS3.putObject(putRequest);
+
+        } catch (IOException e) {
+            throw new RuntimeException("S3 파일 업로드 실패", e);
         }
 
         return amazonS3.getUrl(amazonConfig.getBucket(), keyName).toString();
+    }
+
+    private String determineContentType(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+
+        if (originalFilename != null) {
+            String extension = originalFilename.toLowerCase();
+            if (extension.endsWith(".jpg") || extension.endsWith(".jpeg")) {
+                return "image/jpeg";
+            } else if (extension.endsWith(".png")) {
+                return "image/png";
+            } else if (extension.endsWith(".gif")) {
+                return "image/gif";
+            } else if (extension.endsWith(".webp")) {
+                return "image/webp";
+            }
+        }
+
+        return "application/octet-stream";
     }
 
     public void deleteFile(String keyName) {
         try {
             amazonS3.deleteObject(new DeleteObjectRequest(amazonConfig.getBucket(), keyName));
         } catch (Exception e) {
-            log.error("error at AmazonS3Manager deleteFile : {}", (Object) e.getStackTrace());
-            throw new RuntimeException("Failed to delete file from S3", e);
+            throw new RuntimeException("S3 파일 삭제 실패", e);
         }
     }
 
@@ -52,5 +82,4 @@ public class AmazonS3Manager{
     public String generateChat(Uuid uuid) {
         return amazonConfig.getChatPath() + '/' + uuid.getUuid();
     }
-
 }
