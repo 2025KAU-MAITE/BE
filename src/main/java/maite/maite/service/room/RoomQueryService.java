@@ -12,7 +12,7 @@ public class RoomQueryService {
 
     public Room findRoomById(Long roomId) {
         return roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("회의방을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("회의방을 찾을 수 없습니다."));
     }
 }
 

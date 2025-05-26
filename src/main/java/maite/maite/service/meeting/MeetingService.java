@@ -22,4 +22,5 @@ public interface MeetingService {
     void leaveMeeting(Long meetingId, User user);
     void saveParticipantAddress(Long meetingId, User user, MeetingAddressRequest address);
     List<CafeResponse> findMeetingNearbyCafes(Long meetingId);
+    void setMeetingPlaceName(Long meetingId, User user, String address);
 }

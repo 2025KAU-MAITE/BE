@@ -241,4 +241,17 @@ public class MeetingServiceImpl implements MeetingService {
 
         return naverMapService.getNearbyCafes(locationName);
     }
+
+    @Transactional
+    public void setMeetingPlaceName(Long meetingId, User user, String address) {
+        Meeting meeting = meetingQueryService.findMeetingById(meetingId);
+
+        // 제안자만 장소 설정 가능
+        if (!meeting.getProposer().getId().equals(user.getId())) {
+            throw new RuntimeException("회의 제안자만 장소를 설정할 수 있습니다.");
+        }
+
+        meeting.setAddress(address);
+    }
+
 }

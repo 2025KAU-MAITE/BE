@@ -35,6 +35,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public List<RoomSummaryResponse> getRoomsOfUser(User user) {
+
         return userRoomRepository.findAllByUserAndStatus(user, InviteStatus.ACCEPTED)
                 .stream()
                 .map(UserRoom::getRoom)
@@ -68,6 +69,15 @@ public class RoomServiceImpl implements RoomService {
     @Transactional
     @Override
     public void createRoom(User host, RoomCreateRequest req) {
+
+        if (req.getName() == null || req.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("회의방 이름을 입력해주세요.");
+        }
+
+        if (req.getDescription() == null || req.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("회의방 설명을 입력해주세요.");
+        }
+
         Room room = Room.builder()
                 .name(req.getName())
                 .description(req.getDescription())

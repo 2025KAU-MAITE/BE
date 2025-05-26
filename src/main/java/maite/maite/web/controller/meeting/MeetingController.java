@@ -101,4 +101,15 @@ public class MeetingController {
         List<CafeResponse> cafes = meetingService.findMeetingNearbyCafes(meetingId);
         return ResponseEntity.ok(cafes);
     }
+
+    @Operation(summary = "회의 장소 입력")
+    @PatchMapping("/{meetingId}/select-place")
+    public ResponseEntity<Void> selectMeetingPlace(
+            @PathVariable Long meetingId,
+            @RequestBody MeetingAddressRequest request,
+            @AuthenticationPrincipal CustomerUserDetails userDetails
+    ) {
+        meetingService.setMeetingPlaceName(meetingId, userDetails.getUser(), request.getAddress());
+        return ResponseEntity.ok().build();
+    }
 }
