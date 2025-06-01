@@ -49,6 +49,10 @@ public class ChatRoom extends BaseEntity {
     @Builder.Default
     private List<ChatRoomUser> chatRoomUsers = new ArrayList<>();
 
+    @Column(columnDefinition = "BIGINT DEFAULT 0") // DB 레벨 기본값 설정
+    @Builder.Default
+    private Long lastReadMessageId = 0L;
+
     // 채팅방 참여자 추가 헬퍼 메소드
     public void addUser(ChatRoomUser chatRoomUser) {
         this.chatRoomUsers.add(chatRoomUser);
