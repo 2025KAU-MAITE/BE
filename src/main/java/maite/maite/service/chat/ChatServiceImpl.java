@@ -72,12 +72,14 @@ public class ChatServiceImpl implements ChatService {
                 .user(sender)
                 .chatRoom(chatRoom)
                 .role(ChatRoomUserRole.USER) //권한을 넣을까 말까
+                .lastReadMessageId(0L) // 처음에는 읽은 메시지가 없으므로 0으로 설정
                 .build();
 
         ChatRoomUser receiverMember = ChatRoomUser.builder()
                 .user(receiver)
                 .chatRoom(chatRoom)
                 .role(ChatRoomUserRole.USER) //권한을 넣을까 말까
+                .lastReadMessageId(0L) // 처음에는 읽은 메시지가 없으므로 0으로 설정
                 .build();
 
         chatRoom.addUser(senderMember);
@@ -114,6 +116,7 @@ public class ChatServiceImpl implements ChatService {
                 .user(host)
                 .chatRoom(chatRoom)
                 .role(ChatRoomUserRole.ADMIN) //권한을 넣을까 말까
+                .lastReadMessageId(0L) // 처음에는 읽은 메시지가 없으므로 0으로 설정
                 .build();
 
         chatRoom.addUser(hostMember);
@@ -129,6 +132,7 @@ public class ChatServiceImpl implements ChatService {
                         .user(member)
                         .chatRoom(chatRoom)
                         .role(ChatRoomUserRole.USER) //권한을 넣을까 말까
+                        .lastReadMessageId(0L) // 처음에는 읽은 메시지가 없으므로 0으로 설정
                         .build();
 
                 chatRoom.addUser(memberUser);
@@ -266,6 +270,7 @@ public class ChatServiceImpl implements ChatService {
                     .user(newUser)
                     .chatRoom(chatRoom)
                     .role(ChatRoomUserRole.USER)
+                    .lastReadMessageId(0L) // 처음에는 읽은 메시지가 없으므로 0으로 설정
                     .build();
 
             chatRoom.addUser(newMember);
@@ -395,7 +400,11 @@ public class ChatServiceImpl implements ChatService {
 
         for(ChatRoomUser chatRoomUser : allUsers) {
             User user = chatRoomUser.getUser();
-            userLastReadMap.put(user.getId(), chatRoomUser.getLastReadMessageId() != null ? chatRoomUser.getLastReadMessageId() : 0L);
+            Long lastReadId = chatRoomUser.getLastReadMessageId();
+            if (lastReadId == null) {
+                lastReadId = 0L;
+            }
+            userLastReadMap.put(user.getId(), lastReadId);
             userMap.put(user.getId(), user);
         }
 
@@ -449,9 +458,20 @@ public class ChatServiceImpl implements ChatService {
         ChatRoomUser chatRoomUser = chatRoomUserRepository.findByChatRoomIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방에 참여하지 않은 사용자입니다."));
 
-        if(chatRoomUser.getLastReadMessageId() != null && chatRoomUser.getLastReadMessageId() >= messageId) {
+        // null 안전성 개선: null이면 0으로 처리
+        Long currentLastRead = chatRoomUser.getLastReadMessageId();
+        if (currentLastRead == null) {
+            currentLastRead = 0L;
+        }
+
+        // 이미 읽었거나 더 최신 메시지까지 읽은 경우 패스
+        if (currentLastRead >= messageId) {
             return;
         }
+
+//        if(chatRoomUser.getLastReadMessageId() != null && chatRoomUser.getLastReadMessageId() >= messageId) {
+//            return;
+//        }
 
         // 마지막 읽은 메세지 ID 업데이트
         chatRoomUser.setLastReadMessageId(messageId);
