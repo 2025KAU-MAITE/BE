@@ -10,5 +10,6 @@ public class MeetingUpdateRequest{
     private String title;
     private String meetingDay;
     private String meetingTime;
+    private String meetingEndTime;
     private String address;
 }

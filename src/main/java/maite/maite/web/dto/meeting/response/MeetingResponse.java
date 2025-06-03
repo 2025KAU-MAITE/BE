@@ -21,6 +21,7 @@ public class MeetingResponse{
     private String proposerName;
     private String meetingDate;
     private String meetingTime;
+    private String meetingEndTime;
     private String address;
     private List<String> participantEmails;
     private String record;

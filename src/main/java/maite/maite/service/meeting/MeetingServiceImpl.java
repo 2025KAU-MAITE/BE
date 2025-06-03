@@ -20,6 +20,7 @@ import maite.maite.web.dto.map.response.GeocodeResponse;
 import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
+import maite.maite.web.dto.meeting.response.MeetingCreateResponse;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
 import maite.maite.web.dto.meeting.response.MeetingSummaryResponse;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,7 @@ public class MeetingServiceImpl implements MeetingService {
                         .proposerName(meeting.getProposer().getName())
                         .meetingDate(meeting.getMeetingDate().toString())
                         .meetingTime(meeting.getMeetingTime().toString())
+                        .meetingEndTime(meeting.getMeetingEndTime().toString())
                         .address(meeting.getAddress())
                         .build()) // 필요한 필드만
                 .collect(Collectors.toList());
@@ -84,6 +86,7 @@ public class MeetingServiceImpl implements MeetingService {
                             .proposerName(meeting.getProposer().getName())
                             .meetingDate(meeting.getMeetingDate().toString())
                             .meetingTime(meeting.getMeetingTime().toString())
+                            .meetingEndTime(meeting.getMeetingEndTime().toString())
                             .address(meeting.getAddress())
                             .acceptance(acceptance)
                             .build();
@@ -106,6 +109,7 @@ public class MeetingServiceImpl implements MeetingService {
                 .proposerName(meeting.getProposer().getName())
                 .meetingDate(meeting.getMeetingDate().toString())
                 .meetingTime(meeting.getMeetingTime().toString())
+                .meetingEndTime(meeting.getMeetingEndTime().toString())
                 .address(meeting.getAddress())
                 .participantEmails(acceptedEmails)
                 .record(meeting.getRecord())
@@ -118,13 +122,14 @@ public class MeetingServiceImpl implements MeetingService {
 
     @Transactional
     @Override
-    public void createMeeting(Long roomId, User proposer, MeetingCreateRequest req) {
+    public MeetingCreateResponse createMeeting(Long roomId, User proposer, MeetingCreateRequest req) {
         Meeting meeting = Meeting.builder()
                 .room(roomQueryService.findRoomById(roomId))
                 .title(req.getTitle())
                 .proposer(proposer)
                 .meetingDate(LocalDate.parse(req.getMeetingDate()))
                 .meetingTime(LocalTime.parse(req.getMeetingTime()))
+                .meetingEndTime(LocalTime.parse(req.getMeetingEndTime()))
                 .build();
         meeting = meetingRepository.save(meeting);
 
@@ -135,6 +140,8 @@ public class MeetingServiceImpl implements MeetingService {
         if (req.getInviteEmails() != null && !req.getInviteEmails().isEmpty()) {
             meetingInviteService.inviteUsers(meeting, req.getInviteEmails());
         }
+
+        return new MeetingCreateResponse(meeting.getId());
     }
 
     // ✅ 5. 회의 수정
@@ -152,6 +159,9 @@ public class MeetingServiceImpl implements MeetingService {
         }
         if (request.getMeetingTime() != null) {
             meeting.setMeetingTime(LocalTime.parse(request.getMeetingTime()));
+        }
+        if (request.getMeetingEndTime() != null) {
+            meeting.setMeetingEndTime(LocalTime.parse(request.getMeetingEndTime()));
         }
         if (request.getAddress() != null) {
             meeting.setAddress(request.getAddress());

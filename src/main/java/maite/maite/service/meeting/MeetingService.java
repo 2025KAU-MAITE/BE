@@ -7,6 +7,7 @@ import maite.maite.web.dto.map.response.CafeResponse;
 import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
+import maite.maite.web.dto.meeting.response.MeetingCreateResponse;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
 import maite.maite.web.dto.meeting.response.MeetingSummaryResponse;
 
@@ -16,7 +17,7 @@ public interface MeetingService {
     MeetingResponse getMeetingDetail(Long meetingId);
     List<MeetingSummaryResponse> getMeetingsOfUser(User user);
     List<MeetingSummaryResponse> getMeetingsByRoom(Long roomId, User user);
-    void createMeeting(Long roomId, User proposer, MeetingCreateRequest request);
+    MeetingCreateResponse createMeeting(Long roomId, User proposer, MeetingCreateRequest request);
     void updateMeeting(Long meetingId, User user, MeetingUpdateRequest request);
     void deleteMeeting(Long meetingId, User user);
     void leaveMeeting(Long meetingId, User user);

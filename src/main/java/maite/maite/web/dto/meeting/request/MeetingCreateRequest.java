@@ -12,5 +12,6 @@ public class MeetingCreateRequest{
     private String title;
     private String meetingDate;
     private String meetingTime;
+    private String meetingEndTime;
     private List<String> inviteEmails;
 }

@@ -142,6 +142,7 @@ public class MeetingInviteServiceImpl implements MeetingInviteService{
                             .proposerName(meeting.getProposer().getName())
                             .meetingDate(meeting.getMeetingDate().toString())
                             .meetingTime(meeting.getMeetingTime().toString())
+                            .meetingEndTime(meeting.getMeetingEndTime().toString())
                             .address(meeting.getAddress())
                             .build();
                 })

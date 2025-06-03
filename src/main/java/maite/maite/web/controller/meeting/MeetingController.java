@@ -11,6 +11,7 @@ import maite.maite.web.dto.map.response.CafeResponse;
 import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
+import maite.maite.web.dto.meeting.response.MeetingCreateResponse;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
 import maite.maite.web.dto.meeting.response.MeetingSummaryResponse;
 import org.springframework.http.ResponseEntity;
@@ -49,12 +50,12 @@ public class MeetingController {
 
     @Operation(summary = "회의 생성")
     @PostMapping("/rooms/{roomId}")
-    public ResponseEntity<Long> createMeeting(
+    public ResponseEntity<MeetingCreateResponse> createMeeting(
             @PathVariable Long roomId,
             @AuthenticationPrincipal CustomerUserDetails userDetails,
             @RequestBody MeetingCreateRequest request) {
-        meetingService.createMeeting(roomId, userDetails.getUser(), request);
-        return ResponseEntity.ok().build();
+        MeetingCreateResponse response = meetingService.createMeeting(roomId, userDetails.getUser(), request);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "회의 수정")
