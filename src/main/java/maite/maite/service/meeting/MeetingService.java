@@ -1,11 +1,10 @@
 package maite.maite.service.meeting;
 
 import maite.maite.domain.entity.User;
-import maite.maite.domain.entity.meeting.UserMeeting;
-import maite.maite.domain.entity.room.Room;
 import maite.maite.web.dto.map.response.CafeResponse;
 import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
+import maite.maite.web.dto.meeting.request.MeetingPlaceRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
 import maite.maite.web.dto.meeting.response.MeetingCreateResponse;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
@@ -23,5 +22,5 @@ public interface MeetingService {
     void leaveMeeting(Long meetingId, User user);
     void saveParticipantAddress(Long meetingId, User user, MeetingAddressRequest address);
     List<CafeResponse> findMeetingNearbyCafes(Long meetingId);
-    void setMeetingPlaceName(Long meetingId, User user, String address);
+    void setMeetingPlaceName(Long meetingId, User user, MeetingPlaceRequest request);
 }

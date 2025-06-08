@@ -5,20 +5,16 @@ import maite.maite.domain.Enum.InviteStatus;
 import maite.maite.domain.entity.User;
 import maite.maite.domain.entity.meeting.Meeting;
 import maite.maite.domain.entity.meeting.UserMeeting;
-import maite.maite.domain.entity.room.Room;
-import maite.maite.domain.entity.room.UserRoom;
 import maite.maite.repository.UserRepository;
 import maite.maite.repository.meeting.MeetingRepository;
 import maite.maite.repository.meeting.UserMeetingRepository;
 import maite.maite.service.map.NaverMapService;
-import maite.maite.service.meeting.MeetingInviteService;
-import maite.maite.service.meeting.MeetingQueryService;
-import maite.maite.service.meeting.MeetingService;
 import maite.maite.service.room.RoomQueryService;
 import maite.maite.web.dto.map.response.CafeResponse;
 import maite.maite.web.dto.map.response.GeocodeResponse;
 import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
+import maite.maite.web.dto.meeting.request.MeetingPlaceRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
 import maite.maite.web.dto.meeting.response.MeetingCreateResponse;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
@@ -110,7 +106,10 @@ public class MeetingServiceImpl implements MeetingService {
                 .meetingDate(meeting.getMeetingDate().toString())
                 .meetingTime(meeting.getMeetingTime().toString())
                 .meetingEndTime(meeting.getMeetingEndTime().toString())
+                .placeName(meeting.getPlaceName())
                 .address(meeting.getAddress())
+                .latitude(meeting.getLatitude())
+                .longitude(meeting.getLongitude())
                 .participantEmails(acceptedEmails)
                 .record(meeting.getRecord())
                 .recordText(meeting.getRecordText())
@@ -253,7 +252,7 @@ public class MeetingServiceImpl implements MeetingService {
     }
 
     @Transactional
-    public void setMeetingPlaceName(Long meetingId, User user, String address) {
+    public void setMeetingPlaceName(Long meetingId, User user, MeetingPlaceRequest request) {
         Meeting meeting = meetingQueryService.findMeetingById(meetingId);
 
         // 제안자만 장소 설정 가능
@@ -261,7 +260,9 @@ public class MeetingServiceImpl implements MeetingService {
             throw new RuntimeException("회의 제안자만 장소를 설정할 수 있습니다.");
         }
 
-        meeting.setAddress(address);
+        meeting.setPlaceName(request.getPlaceName());
+        meeting.setAddress(request.getAddress());
+        meeting.setLatitude(request.getLatitude());
+        meeting.setLongitude(request.getLongitude());
     }
-
 }

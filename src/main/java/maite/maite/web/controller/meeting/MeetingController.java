@@ -10,6 +10,7 @@ import maite.maite.service.meeting.MeetingService;
 import maite.maite.web.dto.map.response.CafeResponse;
 import maite.maite.web.dto.meeting.request.MeetingAddressRequest;
 import maite.maite.web.dto.meeting.request.MeetingCreateRequest;
+import maite.maite.web.dto.meeting.request.MeetingPlaceRequest;
 import maite.maite.web.dto.meeting.request.MeetingUpdateRequest;
 import maite.maite.web.dto.meeting.response.MeetingCreateResponse;
 import maite.maite.web.dto.meeting.response.MeetingResponse;
@@ -107,10 +108,10 @@ public class MeetingController {
     @PatchMapping("/{meetingId}/select-place")
     public ResponseEntity<Void> selectMeetingPlace(
             @PathVariable Long meetingId,
-            @RequestBody MeetingAddressRequest request,
+            @RequestBody MeetingPlaceRequest request,
             @AuthenticationPrincipal CustomerUserDetails userDetails
     ) {
-        meetingService.setMeetingPlaceName(meetingId, userDetails.getUser(), request.getAddress());
+        meetingService.setMeetingPlaceName(meetingId, userDetails.getUser(), request);
         return ResponseEntity.ok().build();
     }
 }

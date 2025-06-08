@@ -22,7 +22,10 @@ public class MeetingResponse{
     private String meetingDate;
     private String meetingTime;
     private String meetingEndTime;
+    private String placeName;
     private String address;
+    private String latitude;
+    private String longitude;
     private List<String> participantEmails;
     private String record;
     private String recordText;

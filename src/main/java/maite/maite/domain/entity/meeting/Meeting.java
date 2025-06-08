@@ -37,7 +37,11 @@ public class Meeting {
     @Column(nullable = false)
     private LocalTime meetingEndTime;
 
+    // 회의 장소 정보
+    private String placeName;
     private String address;
+    private String latitude;
+    private String longitude;
 
     // 녹음 파일 정보 (경로 등)
     private String record;
