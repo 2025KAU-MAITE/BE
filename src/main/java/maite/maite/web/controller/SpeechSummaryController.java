@@ -47,7 +47,7 @@ public class SpeechSummaryController {
             Meeting meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 meeting이 존재하지 않습니다."));
             // 1. STT
-            String transcript = speechToTextService.transcribe(file);
+            String transcript = clovaSpeechService.uploadAndConvert(file);
             // 2. 요약
             String summary = openAIService.summarize(topic, transcript);
 
@@ -67,7 +67,7 @@ public class SpeechSummaryController {
     ) {
         try {
             // 1. STT
-            String transcript = speechToTextService.transcribe(file);
+            String transcript = clovaSpeechService.uploadAndConvert(file);
             // 2. 요약
             String summary = openAIService.answer(transcript);
             // 3. TTS
