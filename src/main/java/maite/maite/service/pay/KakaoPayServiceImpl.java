@@ -1,7 +1,6 @@
 package maite.maite.service.pay;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import maite.maite.domain.entity.User;
@@ -52,7 +51,7 @@ public class KakaoPayServiceImpl implements KakaoPayService {
         body.add("partner_user_id", userId);
         body.add("item_name", "테스트 요금제");
         body.add("quantity", "1");
-        body.add("total_amount", "20000");
+        body.add("total_amount", "15000");
         body.add("tax_free_amount", "0");
 
         String serverName = request.getServerName();

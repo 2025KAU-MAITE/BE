@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,18 +20,43 @@ public class OpenAIService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // =============================
+    // 요약 메인 메서드
+    // =============================
     public String summarize(String topic, String rawText) {
+        int chunkSize = 1500; // 대략 한글 기준 1,500자 = 약 3,000~4,000 tokens 이하로 안전
 
+        if (rawText.length() <= chunkSize) {
+            return summarizeSingle(topic, rawText);
+        }
+
+        // 긴 입력: 나눠서 부분 요약 후 통합 요약
+        List<String> chunks = splitText(rawText, chunkSize);
+        StringBuilder intermediateSummaries = new StringBuilder();
+
+        for (String chunk : chunks) {
+            String partSummary = summarizeSingle(topic + " (부분)", chunk);
+            intermediateSummaries.append(partSummary).append("\n");
+        }
+
+        // 통합 요약
+        return summarizeSingle(topic + " (통합 요약)", intermediateSummaries.toString());
+    }
+
+    // =============================
+    // 단일 요약 요청 처리
+    // =============================
+    private String summarizeSingle(String topic, String rawText) {
         String prompt = String.format("""
-                회의 주제: %s
+            회의 주제: %s
 
-                아래 회의 내용을 요약해 주세요.
-                문장이 어색하거나 반복되더라도 의미를 정리해서 핵심 위주로 요약해 주세요.
-                만약 회의 내용 중에 다음 회의에 대한 약속이 존재한다면 따로 마지막 줄에 정리해 주세요.
+            아래 회의 내용을 요약해 주세요.
+            문장이 어색하거나 반복되더라도 의미를 정리해서 핵심 위주로 요약해 주세요.
+            만약 회의 내용 중에 다음 회의에 대한 약속이 존재한다면 따로 마지막 줄에 정리해 주세요.
 
-                회의 내용:
-                %s
-                """, topic, rawText);
+            회의 내용:
+            %s
+            """, topic, rawText);
 
         Map<String, Object> body = Map.of(
                 "model", "gpt-3.5-turbo",
@@ -60,6 +86,20 @@ public class OpenAIService {
         } catch (Exception e) {
             return "요약 실패: " + e.getMessage();
         }
+    }
+
+    // =============================
+    // 텍스트 분할 유틸리티
+    // =============================
+    private List<String> splitText(String text, int chunkSize) {
+        List<String> chunks = new ArrayList<>();
+        int start = 0;
+        while (start < text.length()) {
+            int end = Math.min(start + chunkSize, text.length());
+            chunks.add(text.substring(start, end));
+            start = end;
+        }
+        return chunks;
     }
 
     public String answer(String rawText) {
