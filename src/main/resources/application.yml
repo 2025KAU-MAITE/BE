@@ -32,6 +32,10 @@ openai:
   api:
     key: ${OpenAIKey}
 
+gemini:
+  api:
+    key: ${GeminiKey}
+
 naver:
   map:
     client-id: ${NaverMapId}

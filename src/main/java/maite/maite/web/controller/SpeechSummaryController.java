@@ -8,10 +8,7 @@ import maite.maite.domain.entity.meeting.Meeting;
 import maite.maite.repository.SubscriptionRepository;
 import maite.maite.repository.meeting.MeetingRepository;
 import maite.maite.security.CustomerUserDetails;
-import maite.maite.service.AI.ClovaSpeechService;
-import maite.maite.service.AI.TextToSpeechService;
-import maite.maite.service.AI.OpenAIService;
-import maite.maite.service.AI.SpeechToTextService;
+import maite.maite.service.AI.*;
 import maite.maite.web.dto.AI.ClovaResult;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 public class SpeechSummaryController {
 
     private final SpeechToTextService speechToTextService;
+    private final GeminiService geminiService;
     private final OpenAIService openAIService;
     private final TextToSpeechService textToSpeechService;
     private final ClovaSpeechService clovaSpeechService;
@@ -49,7 +47,8 @@ public class SpeechSummaryController {
             // 1. STT
             String transcript = clovaSpeechService.uploadAndConvert(file);
             // 2. 요약
-            String summary = openAIService.summarize(topic, transcript);
+//            String summary = openAIService.summarize(topic, transcript);
+            String summary = geminiService.summarize(topic, transcript);
 
             meeting.setTextSum(summary);
             meetingRepository.save(meeting);
