@@ -11,6 +11,7 @@ import com.google.cloud.storage.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -21,6 +22,9 @@ public class SpeechToTextService {
 
     @Autowired
     private ConvertToWavService convertToWavService;
+
+    @Autowired
+    private AudioChunkerService audioChunkerService;
 
     private SpeechClient createSpeechClient() throws Exception {
         return SpeechClient.create(
@@ -62,6 +66,37 @@ public class SpeechToTextService {
 
             return transcriptBuilder.toString();
         }
+    }
+
+    // 오디오를 청킹해서 변환 (STT 성능/안정성 목적)
+    public String transcribeChunked(MultipartFile file, int chunkSeconds) throws Exception {
+        File wavFile = convertToWavService.convertToWav(file);
+        List<File> chunks = audioChunkerService.splitAudioByDuration(wavFile, chunkSeconds);
+
+        StringBuilder transcriptBuilder = new StringBuilder();
+        try (SpeechClient speechClient = createSpeechClient()) {
+            for (File chunk : chunks) {
+                String gcsUri = uploadToGCS(chunk, "maite_audio_bucket");
+                RecognitionAudio audio = RecognitionAudio.newBuilder()
+                        .setUri(gcsUri)
+                        .build();
+
+                RecognitionConfig config = RecognitionConfig.newBuilder()
+                        .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
+                        .setEnableAutomaticPunctuation(true)
+                        .setLanguageCode("ko-KR")
+                        .build();
+
+                OperationFuture<LongRunningRecognizeResponse, LongRunningRecognizeMetadata> response =
+                        speechClient.longRunningRecognizeAsync(config, audio);
+
+                LongRunningRecognizeResponse result = response.get();  // 응답 대기
+                for (SpeechRecognitionResult res : result.getResultsList()) {
+                    transcriptBuilder.append(res.getAlternatives(0).getTranscript()).append("\n");
+                }
+            }
+        }
+        return transcriptBuilder.toString();
     }
 
 
