@@ -47,8 +47,8 @@ public class SpeechSummaryController {
             // 1. STT
             String transcript = clovaSpeechService.uploadAndConvert(file);
             // 2. 요약
-//            String summary = openAIService.summarize(topic, transcript);
-            String summary = geminiService.summarize(topic, transcript);
+            String summary = openAIService.summarize(topic, transcript);
+//            String summary = geminiService.summarize(topic, transcript);
 
             meeting.setTextSum(summary);
             meetingRepository.save(meeting);
